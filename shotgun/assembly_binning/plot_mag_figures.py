@@ -224,34 +224,39 @@ print("Fig 5D done")
 
 
 # ═══════════════════════════════════════════════════════
-# Fig 5E: Per-sample ARG counts by timepoint and diet
+# Fig 5E: ARG-carrying ORFs per sample, ND and HFD side by side for each antibiotic and timepoint
+# (same layout as Fig 4A; the former version pooled all four treatments into one line per diet)
 # ═══════════════════════════════════════════════════════
-ps = per_sample[per_sample['group'].isin(['AMX_CTL', 'AMX_HFD', 'CIP_CTL', 'CIP_HFD', 'ERY_CTL', 'ERY_HFD', 'CTL', 'HFD'])].copy()
-
-# Order timepoints
+from matplotlib.patches import Patch
 tp_order = ['T0h', 'T72h', 'SD14']
-ps['timepoint'] = pd.Categorical(ps['timepoint'], categories=tp_order, ordered=True)
-ps = ps.sort_values('timepoint')
-
-fig, ax = plt.subplots(figsize=(8, 5))
-
-# Group by diet and timepoint
-diet_colors = {'CTL': '#3498db', 'HFD': '#e74c3c'}
-for diet, color in diet_colors.items():
-    subset = ps[ps['diet'] == diet]
-    grouped = subset.groupby('timepoint')['total_ARGs'].agg(['mean', 'std']).reindex(tp_order)
-    x = range(len(tp_order))
-    ax.errorbar(x, grouped['mean'], yerr=grouped['std'], marker='o', color=color,
-                label=f'{diet}', linewidth=2, capsize=4, markersize=8)
-
-ax.set_xticks(range(len(tp_order)))
-ax.set_xticklabels(tp_order)
-ax.set_xlabel("Timepoint", fontsize=10)
-ax.set_ylabel("Assembly-based ARGs per sample", fontsize=10)
-ax.set_title("Assembly-based ARG counts by diet and timepoint", fontsize=11, fontweight='bold')
-ax.legend(fontsize=10)
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
+DIET_COL = {'ND': '#4477AA', 'HFD': '#CC6677'}
+PAIRS = [('CTL', 'HFD', 'None'), ('AMX_CTL', 'AMX_HFD', 'AMX'),
+         ('CIP_CTL', 'CIP_HFD', 'CIP'), ('ERY_CTL', 'ERY_HFD', 'ERY')]
+fig, ax = plt.subplots(figsize=(11, 4.8))
+rng = np.random.default_rng(1)
+pos, xt, xl, tp_mid = 0.0, [], [], []
+for tp in tp_order:
+    start = pos
+    for nd_g, hfd_g, abx in PAIRS:
+        for off, g, diet in ((-0.2, nd_g, 'ND'), (0.2, hfd_g, 'HFD')):
+            vals = per_sample[(per_sample['timepoint'] == tp) & (per_sample['group'] == g)]['total_ARGs']
+            assert len(vals) == 3, (tp, g, len(vals))
+            ax.bar(pos + off, vals.mean(), width=0.38, color=DIET_COL[diet], edgecolor='black', linewidth=0.5)
+            ax.errorbar(pos + off, vals.mean(), yerr=vals.std(), fmt='none', color='black', capsize=2.5, linewidth=0.9)
+            ax.scatter(pos + off + rng.uniform(-0.06, 0.06, len(vals)), vals, color='black', s=10, zorder=5, alpha=0.7)
+        xt.append(pos); xl.append(abx); pos += 1
+    tp_mid.append((start + pos - 1) / 2); pos += 0.7
+ax.set_xticks(xt); ax.set_xticklabels(xl, fontsize=9)
+for m, tp in zip(tp_mid, tp_order):
+    ax.text(m, -0.12, tp, transform=ax.get_xaxis_transform(), ha='center', va='top', fontsize=11, fontweight='bold')
+ax.set_ylabel("ARG-carrying ORFs per sample\n(assembly-based)", fontsize=10)
+ax.set_ylim(0, 560)
+ax.legend(handles=[Patch(facecolor=DIET_COL['ND'], edgecolor='black', label='Normal diet (ND)'),
+                   Patch(facecolor=DIET_COL['HFD'], edgecolor='black', label='High-fat diet (HFD)')],
+          fontsize=9, loc='upper left', frameon=False, ncol=2)
+ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
+ax.set_title("Assembly-based ARG-carrying ORFs by diet, antibiotic and timepoint", fontsize=12, fontweight='bold')
+plt.tight_layout()
 plt.savefig(f"{OUTDIR}/fig5e_assembly_args_by_diet.pdf")
 plt.savefig(f"{OUTDIR}/fig5e_assembly_args_by_diet.png")
 plt.close()

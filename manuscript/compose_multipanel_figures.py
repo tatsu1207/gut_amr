@@ -32,7 +32,8 @@ FIGS = {
     HF + "fig5_combined.png": [
         [("A", HF + "fig5a_assembly_arg_classes.png"), ("B", HF + "fig5b_top_arg_genera.png"),
          ("D", HF + "fig5d_genomic_context.png")],
-        [("C", HF + "fig5c_lactococcus_vs_mls.png"), ("E", HF + "fig5e_assembly_args_by_diet.png")],
+        [("C", HF + "fig5c_lactococcus_vs_mls.png")],
+        [("E", HF + "fig5e_assembly_args_by_diet.png")],
     ],
 }
 
