@@ -97,7 +97,7 @@ for idx in range(len(groups_to_plot), len(axes)):
     axes[idx].set_visible(False)
 
 fig.legend(genera_cols, loc="center left", bbox_to_anchor=(1.0, 0.5),
-           fontsize=8, title="Genus", title_fontsize=9)
+           fontsize=16, title="Genus", title_fontsize=18)
 fig.suptitle("Gut Microbiota Composition by Treatment Group Over Time", fontsize=14, y=1.02)
 plt.tight_layout()
 fig.savefig(OUT / "taxonomy_stacked_bars.png", dpi=300, bbox_inches="tight")
