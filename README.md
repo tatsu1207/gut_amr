@@ -30,7 +30,7 @@ Raw reads: NCBI SRA, BioProject **PRJNA1501316**.
 | `shotgun/mobilome/` | `run_mobilome_analysis.sh`, `analyze_mobilome.py`, `*_plasmid_summaries.sh` | ARG mobility (plasmid/phage/conjugation) and Table S7 |
 | `shotgun/butyrate/` | `run_search.sh`, `analyze_butyrate.py`, `plot_fig6_butyrate.py` | butyrate-pathway genes (KOfam/HMMER, DIAMOND for But), Fig. 6, Table S6 |
 | `shotgun/lmrD/` | `classify_mobility.py` | mobility rule applied to the lmrD homologues (Table S13) |
-| `manuscript/` | `compose_multipanel_figures.py`, `build_*`, `generate_manuscript_pdf.py` | figure assembly and the submission documents |
+| `manuscript/` | `compose_multipanel_figures.py`, `build_*`, `generate_manuscript_pdf.py`, `export_panels.py` | figure assembly, one PNG per panel, and the submission documents |
 
 ## Notes
 
