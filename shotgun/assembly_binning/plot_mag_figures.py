@@ -57,7 +57,14 @@ def simplify_drug_class(dc):
     else:
         return "Other"
 
-full["simple_class"] = full["drug_class"].apply(simplify_drug_class)
+# Same rule as the Results text: a gene counts toward a class only if CARD assigns it that
+# single class; genes with several classes in their CARD string form their own slice.
+def single_class(dc):
+    dc = str(dc)
+    if ";" in dc:
+        return "Multi-class"
+    return dc.replace(" antibiotic", "").replace("disinfecting agents and antiseptics", "disinfectants").capitalize()
+full["simple_class"] = full["drug_class"].apply(single_class)
 class_counts = full["simple_class"].value_counts()
 
 # Merge small categories
@@ -70,13 +77,13 @@ if other_sum > 0:
 colors_pie = plt.cm.Set3(np.linspace(0, 1, len(major)))
 
 fig, ax = plt.subplots(figsize=(6, 6))
-wedges, texts, autotexts = ax.pie(
-    major.values, labels=major.index, autopct=lambda p: f'{p:.1f}%' if p > 3 else '',
-    colors=colors_pie, startangle=90, pctdistance=0.8,
+# Small slices are labelled in a legend, not on the pie, so their labels cannot overlap.
+wedges, _ = ax.pie(
+    major.values, colors=colors_pie, startangle=90,
     wedgeprops=dict(linewidth=0.5, edgecolor='white')
 )
-for t in autotexts:
-    t.set_fontsize(8)
+ax.legend(wedges, [f"{k} ({v:,}; {v / major.sum() * 100:.1f}%)" for k, v in major.items()],
+          loc='upper center', bbox_to_anchor=(0.5, 0.02), ncol=2, fontsize=9, frameon=False)
 ax.set_title("Assembly-based ARG drug class distribution\n(n = 17,371)", fontsize=11, fontweight='bold')
 plt.savefig(f"{OUTDIR}/fig5a_assembly_arg_classes.pdf")
 plt.savefig(f"{OUTDIR}/fig5a_assembly_arg_classes.png")
@@ -200,11 +207,12 @@ for loc in ['chromosome', 'plasmid', 'phage']:
         context_colors.append(color_map[loc])
 
 fig, ax = plt.subplots(figsize=(5, 5))
-wedges, texts = ax.pie(
-    context_vals, labels=context_labels, colors=context_colors,
-    startangle=90, wedgeprops=dict(linewidth=0.5, edgecolor='white'),
-    textprops={'fontsize': 10}
+wedges, _ = ax.pie(
+    context_vals, colors=context_colors,
+    startangle=90, wedgeprops=dict(linewidth=0.5, edgecolor='white')
 )
+ax.legend(wedges, [l.replace("\n", " ") for l in context_labels],
+          loc='upper center', bbox_to_anchor=(0.5, 0.02), ncol=1, fontsize=10, frameon=False)
 ax.set_title("Genomic context of assembly-based ARGs\n(n = 17,371)", fontsize=11, fontweight='bold')
 plt.savefig(f"{OUTDIR}/fig5d_genomic_context.pdf")
 plt.savefig(f"{OUTDIR}/fig5d_genomic_context.png")
