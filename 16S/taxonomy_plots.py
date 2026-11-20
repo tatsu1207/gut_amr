@@ -9,6 +9,9 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.expanduser("~/vault/kjm/miseq"))
+import tplabels; tplabels.install()  # show T0/T1/T3/R3...R14 instead of the data codes
 import seaborn as sns
 from pathlib import Path
 
@@ -154,7 +157,7 @@ if available_targets:
                        marker="o", markersize=4, capsize=3, linewidth=1.5,
                        color=traj_colors[t_idx], label=traj_name)
 
-        ax.set_xlabel("Day")
+        ax.set_xlabel("Timepoint")
         ax.set_ylabel("Relative abundance (%)")
         ax.set_title(f"{genus} dynamics", fontsize=12, fontweight="bold")
         ax.legend(fontsize=7, loc="best")

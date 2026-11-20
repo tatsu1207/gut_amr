@@ -3,6 +3,9 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys as _sys, os as _os
+_sys.path.insert(0, _os.path.expanduser("~/vault/kjm/miseq"))
+import tplabels; tplabels.install()  # show T0/T1/T3/R3...R14 instead of the data codes
 import matplotlib as mpl
 import numpy as np
 

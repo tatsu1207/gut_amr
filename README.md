@@ -34,6 +34,9 @@ Raw reads: NCBI SRA, BioProject **PRJNA1501316**.
 
 ## Notes
 
+- Timepoints: data files and sample IDs use the original codes (T0h, T24h, T72h, S72h, SD7, SD10, SD14,
+  matching SRA); figures and the manuscript show T0, T1, T3, R3, R7, R10, R14 (T = days since the first
+  dose, R = days since the last dose). `manuscript/tplabels.py` converts the labels when a figure is saved.
 - Scripts were run in place on the authors' server and contain absolute paths (`/home/unnot/vault/kjm/...`);
   edit these before running elsewhere.
 - Read-level resistome results use **CARD protein homolog models only**. rRNA gene variant, protein

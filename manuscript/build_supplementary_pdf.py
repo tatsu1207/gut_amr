@@ -5,7 +5,10 @@ Large data tables stay in supplementary_tables.xlsx and are cited here as
 Supplementary Data; only figures and small tables are rendered inline.
 """
 import os
+import sys
 import pandas as pd
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import tplabels
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -44,7 +47,7 @@ contents = [
     ["Supplementary Figure S4", "The 25 individual ARGs that changed most"],
     ["Supplementary Table 1", "PERMANOVA results across timepoints"],
     ["Supplementary Table S4", "ARG counts by bacterial genus (assembly-based)"],
-    ["Supplementary Table S6c", "SD14 butyrate-gene abundance vs measured cecal SCFAs"],
+    ["Supplementary Table S6c", "R14 butyrate-gene abundance vs measured cecal SCFAs"],
     ["Supplementary Table S6d", "Butyrate gene / SCFA correlation statistics"],
     ["Supplementary Table S7a", "ARG association with mobile genetic elements by drug class"],
     ["Supplementary Data", "Tables S1, S2 (CARD protein homolog models; rRNA-variant-excluded and unfiltered versions alongside), "
@@ -93,7 +96,7 @@ fig(os.path.expanduser("~/vault/kjm/miseq/dada2_output/figures/taxonomy_stacked_
 fig(os.path.expanduser("~/vault/kjm/hiseq/figures/fig4d_top_args_heatmap.png"), 6.6, "Supplementary Figure S4",
     "<b>Supplementary Fig. S4. Individual ARGs with the largest changes.</b> "
     "Heatmap of mean read-level abundance (ARG copies per 16S rRNA gene copy; CARD protein homolog models "
-    "only) for the 25 ARGs with the largest change in group mean between T0h and T72h in any "
+    "only) for the 25 ARGs with the largest change in group mean between T0 and T3 in any "
     "antibiotic-treated group, shown for every group and timepoint (n = 3 mice each). Descriptive; "
     "no statistical test was applied.")
 
@@ -109,6 +112,7 @@ def table(df, title, legend, maxrows=None, fontsize=7, landscape_page=False, col
             if isinstance(v, float):
                 v = f"{v:.3g}"
             v = str(v)
+            v = tplabels.label(v) if not v.startswith("ARG_") else v
             if len(v) > 110:                       # keep free-text cells from blowing up row height
                 v = v[:107].rsplit(";", 1)[0] + " ..."
             row.append(Paragraph(v, ParagraphStyle('c', parent=SMALL, fontSize=fontsize)))
@@ -140,12 +144,12 @@ table(genus, "Supplementary Table S4",
 s7c = pd.read_excel(XL, sheet_name="TableS6c_SD14_vs_cecal_SCFA")
 table(s7c, "Supplementary Table S6c",
       "<b>Supplementary Table S6c.</b> Mean butyrate-synthesis gene abundance (copies per genome) at "
-      "SD14 for each experimental group, alongside the mean cecal acetate, propionate, and butyrate "
+      "R14 for each experimental group, alongside the mean cecal acetate, propionate, and butyrate "
       "concentrations (micromolar) measured by gas chromatography.")
 
 s7d = pd.read_excel(XL, sheet_name="TableS6d_SCFA_correlation")
 table(s7d, "Supplementary Table S6d",
-      "<b>Supplementary Table S6d.</b> Correlation between butyrate-synthesis gene abundance at SD14 "
+      "<b>Supplementary Table S6d.</b> Correlation between butyrate-synthesis gene abundance at R14 "
       "and measured cecal SCFA concentrations, across the eight group means.")
 
 s8a = pd.read_excel(XL, sheet_name="TableS7a_mobilome_by_class")
