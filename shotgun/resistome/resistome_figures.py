@@ -91,47 +91,36 @@ grp_colors = {
 }
 
 # ============================================================
-# Fig 4A: Total ARG abundance by group across timepoints
+# Fig 4A: Total ARG abundance, ND and HFD side by side for each antibiotic and timepoint
+# (replaces the former Fig 4E diet panel, which replotted the same values)
 # ============================================================
-fig, ax = plt.subplots(figsize=(10, 5))
-
-x_positions = []
-x_labels = []
-pos = 0
+DIET_COL = {'ND': '#4477AA', 'HFD': '#CC6677'}
+PAIRS = [('CTL', 'HFD', 'None'), ('AMX_CTL', 'AMX_HFD', 'AMX'),
+         ('CIP_CTL', 'CIP_HFD', 'CIP'), ('ERY_CTL', 'ERY_HFD', 'ERY')]
+fig, ax = plt.subplots(figsize=(11, 4.8))
+rng = np.random.default_rng(1)
+pos, xt, xl, tp_mid = 0.0, [], [], []
 for tp in tp_order:
-    for grp in grp_order:
-        subset = df[(df['timepoint'] == tp) & (df['group'] == grp)]
-        if subset.empty:
-            continue
-        vals = subset['total_ARG']
-        bar = ax.bar(pos, vals.mean(), width=0.7, color=grp_colors[grp],
-                     edgecolor='black', linewidth=0.5)
-        ax.errorbar(pos, vals.mean(), yerr=vals.std(), fmt='none',
-                    color='black', capsize=3, linewidth=1)
-        # Individual points
-        ax.scatter([pos] * len(vals), vals, color='black', s=12, zorder=5, alpha=0.6)
-        x_positions.append(pos)
-        x_labels.append(f"{grp}\n{tp}")
-        pos += 1
-    pos += 0.8  # gap between timepoints
-
-ax.set_xticks(x_positions)
-ax.set_xticklabels(x_labels, fontsize=6, rotation=45, ha='right')
+    start = pos
+    for nd_g, hfd_g, abx in PAIRS:
+        for off, g, diet in ((-0.2, nd_g, 'ND'), (0.2, hfd_g, 'HFD')):
+            vals = df[(df['timepoint'] == tp) & (df['group'] == g)]['total_ARG']
+            ax.bar(pos + off, vals.mean(), width=0.38, color=DIET_COL[diet], edgecolor='black', linewidth=0.5)
+            ax.errorbar(pos + off, vals.mean(), yerr=vals.std(), fmt='none', color='black', capsize=2.5, linewidth=0.9)
+            ax.scatter(pos + off + rng.uniform(-0.06, 0.06, len(vals)), vals, color='black', s=10, zorder=5, alpha=0.7)
+        xt.append(pos); xl.append(abx); pos += 1
+    tp_mid.append((start + pos - 1) / 2); pos += 0.7
+ax.set_xticks(xt); ax.set_xticklabels(xl, fontsize=9)
+for m, tp in zip(tp_mid, tp_order):
+    ax.text(m, -0.12, tp, transform=ax.get_xaxis_transform(), ha='center', va='top', fontsize=11, fontweight='bold')
 ax.set_ylabel("Total ARG abundance\n(copies / 16S rRNA gene copy)", fontsize=10)
-ax.set_title("Total ARG Abundance Across Groups and Timepoints", fontsize=12, fontweight='bold')
-
-# Add timepoint labels
-tp_starts = [0, 0, 0]
-idx = 0
-for i, tp in enumerate(tp_order):
-    start = idx
-    for grp in grp_order:
-        if not df[(df['timepoint'] == tp) & (df['group'] == grp)].empty:
-            idx += 1
-    tp_starts[i] = (start + idx - 1) / 2
-    idx += 0  # account for gap differently
-
 ax.set_ylim(bottom=0)  # SD bars of skewed n = 3 groups would otherwise run below zero
+from matplotlib.patches import Patch
+ax.legend(handles=[Patch(facecolor=DIET_COL['ND'], edgecolor='black', label='Normal diet (ND)'),
+                   Patch(facecolor=DIET_COL['HFD'], edgecolor='black', label='High-fat diet (HFD)')],
+          fontsize=9, loc='upper left', frameon=False)
+ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
+ax.set_title("Total ARG abundance by diet, antibiotic and timepoint", fontsize=12, fontweight='bold')
 plt.tight_layout()
 fig.savefig(OUT / "fig4a_total_arg.png", dpi=300, bbox_inches='tight')
 fig.savefig(OUT / "fig4a_total_arg.pdf", bbox_inches='tight')
@@ -287,66 +276,12 @@ sns.heatmap(heatmap_data, cmap='YlOrRd', ax=ax, linewidths=0.3,
             xticklabels=True, yticklabels=True)
 ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', fontsize=7)
 ax.set_yticklabels(ax.get_yticklabels(), fontsize=8)
-ax.set_title("25 ARGs with the Largest Change in Group Mean, T0h to T72h",
+ax.set_title("25 ARGs with the largest change in group mean, T0h to T72h",
              fontsize=12, fontweight='bold')
 plt.tight_layout()
 fig.savefig(OUT / "fig4d_top_args_heatmap.png", dpi=300, bbox_inches='tight')
 fig.savefig(OUT / "fig4d_top_args_heatmap.pdf", bbox_inches='tight')
 print(f"Saved: {OUT / 'fig4d_top_args_heatmap.png'}")
-plt.close()
-
-# ============================================================
-# Fig 4E: HFD vs ND paired comparison (total ARG, T72h and SD14)
-# ============================================================
-fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-
-pairs = [('AMX_CTL', 'AMX_HFD', 'Amoxicillin'),
-         ('CIP_CTL', 'CIP_HFD', 'Ciprofloxacin'),
-         ('ERY_CTL', 'ERY_HFD', 'Erythromycin'),
-         ('CTL', 'HFD', 'No antibiotic')]
-
-for ax_idx, tp in enumerate(['T72h', 'SD14']):
-    ax = axes[ax_idx]
-    x = np.arange(len(pairs))
-    width = 0.35
-
-    nd_vals = []
-    hfd_vals = []
-    nd_err = []
-    hfd_err = []
-
-    for nd_grp, hfd_grp, label in pairs:
-        nd_data = df[(df['group'] == nd_grp) & (df['timepoint'] == tp)]['total_ARG']
-        hfd_data = df[(df['group'] == hfd_grp) & (df['timepoint'] == tp)]['total_ARG']
-        nd_vals.append(nd_data.mean() if len(nd_data) > 0 else 0)
-        hfd_vals.append(hfd_data.mean() if len(hfd_data) > 0 else 0)
-        nd_err.append(nd_data.std() if len(nd_data) > 0 else 0)
-        hfd_err.append(hfd_data.std() if len(hfd_data) > 0 else 0)
-
-    bars1 = ax.bar(x - width/2, nd_vals, width, yerr=nd_err, capsize=4,
-                   color='#4477AA', edgecolor='black', linewidth=0.5, label='ND')
-    bars2 = ax.bar(x + width/2, hfd_vals, width, yerr=hfd_err, capsize=4,
-                   color='#CC6677', edgecolor='black', linewidth=0.5, label='HFD')
-    # npj guideline: bar charts must show individual data points (n = 3 mice per bar)
-    _rng = np.random.default_rng(1)
-    for k, (nd_grp, hfd_grp, _) in enumerate(pairs):
-        for off, g in ((-width/2, nd_grp), (width/2, hfd_grp)):
-            v = df[(df['group'] == g) & (df['timepoint'] == tp)]['total_ARG'].values
-            ax.scatter(k + off + _rng.uniform(-0.06, 0.06, len(v)), v, s=14,
-                       color='black', alpha=0.7, zorder=5)
-    ax.set_ylim(bottom=0)  # SD bar of the skewed AMX_CTL T72h group would run below zero
-
-    ax.set_xticks(x)
-    ax.set_xticklabels([p[2] for p in pairs], fontsize=9)
-    ax.set_ylabel("Total ARG abundance\n(copies / 16S copy)" if ax_idx == 0 else "")
-    ax.set_title(f"{tp}", fontsize=12, fontweight='bold')
-    ax.legend(fontsize=9)
-
-fig.suptitle("Diet Effect on Total ARG Abundance", fontsize=13, y=1.02)
-plt.tight_layout()
-fig.savefig(OUT / "fig4e_hfd_vs_nd_arg.png", dpi=300, bbox_inches='tight')
-fig.savefig(OUT / "fig4e_hfd_vs_nd_arg.pdf", bbox_inches='tight')
-print(f"Saved: {OUT / 'fig4e_hfd_vs_nd_arg.png'}")
 plt.close()
 
 print("\nAll resistome figures done.")

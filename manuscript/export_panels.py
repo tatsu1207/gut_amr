@@ -15,19 +15,21 @@ from matplotlib.transforms import Bbox
 
 E = os.path.expanduser
 OUT = E("~/vault/kjm/figures/panels_png/")
+shutil.rmtree(OUT, ignore_errors=True)  # stale panel names must not survive a layout change
 os.makedirs(OUT, exist_ok=True)
 TMP = tempfile.mkdtemp()
 D, H = E("~/vault/kjm/miseq/dada2_output/figures/"), E("~/vault/kjm/hiseq/figures/")
 
 COPY = {
-    "fig3A_taxonomy_stacked_bars": D + "taxonomy_stacked_bars.png",
-    "fig3B_genus_trajectories": D + "genus_trajectories.png",
-    "fig3C_genus_heatmap": D + "genus_heatmap.png",
-    "fig4A_total_arg": H + "fig4a_total_arg.png",
+    "fig3A_genus_trajectories": D + "genus_trajectories.png",
+    "fig3B_genus_heatmap": D + "genus_heatmap.png",
+    "fig4A_total_arg_by_diet": H + "fig4a_total_arg.png",
     "fig4B_arg_class_composition": H + "fig4b_arg_class_composition.png",
     "fig4C_arg_foldchange_heatmap": H + "fig4c_arg_foldchange_heatmap.png",
-    "fig4D_top_args_heatmap": H + "fig4d_top_args_heatmap.png",
-    "fig4E_hfd_vs_nd_arg": H + "fig4e_hfd_vs_nd_arg.png",
+    "figS1_rarefaction": D + "figS1_rarefaction.png",
+    "figS2_scfa": D + "figS2_scfa.png",
+    "figS3_taxonomy_stacked_bars": D + "taxonomy_stacked_bars.png",
+    "figS4_top_args_heatmap": H + "fig4d_top_args_heatmap.png",
     "fig5A_assembly_arg_classes": H + "fig5a_assembly_arg_classes.png",
     "fig5B_top_arg_genera": H + "fig5b_top_arg_genera.png",
     "fig5C_lactococcus_vs_mls": H + "fig5c_lactococcus_vs_mls.png",

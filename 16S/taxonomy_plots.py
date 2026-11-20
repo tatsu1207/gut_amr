@@ -24,7 +24,7 @@ meta = pd.read_csv("/home/unnot/vault/kjm/miseq/dada2_output/metadata.tsv", sep=
 asv = asv.drop(columns=["sequence"], errors="ignore")
 
 # Filter to ARG experiment samples only (have proper metadata)
-arg_samples = meta[meta["experiment"].isin(["ARG", "ARG_D0"])].index
+arg_samples = meta[meta["experiment"] == "ARG"].index  # main experiment only, as in the text (ARG_D0 day-0 batch excluded)
 arg_samples = arg_samples.intersection(asv.columns)
 meta_arg = meta.loc[arg_samples]
 asv_arg = asv[arg_samples]
@@ -58,8 +58,8 @@ colors = sns.color_palette("tab20", n_colors)
 # ============================================================
 # Figure 1: Stacked bar plot - mean composition by group x timepoint
 # ============================================================
-groups_to_plot = ["AMX_CTL", "AMX_HFD", "CIP_CTL", "CIP_HFD",
-                  "ERY_CTL", "ERY_HFD", "AMX_Early", "CIP_Early", "CTL", "HFD"]
+groups_to_plot = ["CTL", "HFD", "AMX_CTL", "AMX_HFD", "CIP_CTL", "CIP_HFD",
+                  "ERY_CTL", "ERY_HFD"]  # the AMX_Early/CIP_Early cohorts are not part of this study
 groups_to_plot = [g for g in groups_to_plot if g in rel_plot["group"].unique()]
 
 fig, axes = plt.subplots(2, len(groups_to_plot) // 2 + len(groups_to_plot) % 2,
@@ -121,9 +121,9 @@ if available_targets:
 
     # Define trajectory groups: antibiotic-based
     traj_groups = {
-        "AMX_ND": ["AMX_CTL", "AMX_Early"],
+        "AMX_ND": ["AMX_CTL"],
         "AMX_HFD": ["AMX_HFD"],
-        "CIP_ND": ["CIP_CTL", "CIP_Early"],
+        "CIP_ND": ["CIP_CTL"],
         "CIP_HFD": ["CIP_HFD"],
         "ERY_ND": ["ERY_CTL"],
         "ERY_HFD": ["ERY_HFD"],
@@ -173,12 +173,12 @@ if available_targets:
 # Figure 3: Overall composition heatmap - top genera across groups
 # ============================================================
 mean_by_group = rel_plot.groupby("group")[top_genera].mean()
-mean_by_group = mean_by_group.loc[mean_by_group.index.isin(groups_to_plot)]
+mean_by_group = mean_by_group.reindex([g for g in groups_to_plot if g in mean_by_group.index])
 
 fig, ax = plt.subplots(figsize=(12, 6))
 sns.heatmap(mean_by_group.T, cmap="YlOrRd", annot=True, fmt=".1f",
             ax=ax, cbar_kws={"label": "Mean relative abundance (%)"})
-ax.set_title("Mean Genus Relative Abundance by Treatment Group", fontsize=12)
+ax.set_title("Mean genus relative abundance by group (all timepoints pooled)", fontsize=12)
 ax.set_ylabel("Genus")
 ax.set_xlabel("Treatment Group")
 plt.tight_layout()

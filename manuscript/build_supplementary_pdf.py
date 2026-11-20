@@ -4,6 +4,7 @@
 Large data tables stay in supplementary_tables.xlsx and are cited here as
 Supplementary Data; only figures and small tables are rendered inline.
 """
+import os
 import pandas as pd
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
@@ -39,12 +40,14 @@ S.append(Paragraph("Contents", H2))
 contents = [
     ["Supplementary Figure S1", "Rarefaction curves and library size distribution"],
     ["Supplementary Figure S2", "Cecal short-chain fatty acid concentrations by group"],
+    ["Supplementary Figure S3", "Genus composition of each group at each timepoint"],
+    ["Supplementary Figure S4", "The 25 individual ARGs that changed most"],
     ["Supplementary Table 1", "PERMANOVA results across timepoints"],
     ["Supplementary Table S4", "ARG counts by bacterial genus (assembly-based)"],
     ["Supplementary Table S6c", "SD14 butyrate-gene abundance vs measured cecal SCFAs"],
     ["Supplementary Table S6d", "Butyrate gene / SCFA correlation statistics"],
     ["Supplementary Table S7a", "ARG association with mobile genetic elements by drug class"],
-    ["Supplementary Data", "Tables S1, S2 (rRNA variant models excluded; unfiltered version alongside), "
+    ["Supplementary Data", "Tables S1, S2 (CARD protein homolog models; rRNA-variant-excluded and unfiltered versions alongside), "
                            "S3, S5, S6a, S6b, S6e, S7b, S7c, S8-S14 "
                            "(provided as a separate Excel workbook; too large to render here)"],
 ]
@@ -79,6 +82,20 @@ fig(f"{FIGM}/figS2_scfa.png", 6.6, "Supplementary Figure S2",
     "experiment. Each point is one mouse; horizontal bars are group means. Blue, normal diet; red, "
     "high-fat diet. P values are from a Kruskal-Wallis test across all eight groups. This figure shows "
     "the per-animal distribution underlying the summary box plots of Fig. 1d-f.")
+
+fig(os.path.expanduser("~/vault/kjm/miseq/dada2_output/figures/taxonomy_stacked_bars.png"), 6.6, "Supplementary Figure S3",
+    "<b>Supplementary Fig. S3. Genus-level composition by group and timepoint.</b> "
+    "Stacked bars show the mean relative abundance of the 15 most abundant genera (remaining genera as 'Other') "
+    "for each diet-antibiotic group at each 16S rRNA gene sampling timepoint. Relative abundances are "
+    "percentages of the reads assigned at genus level in each sample. CTL and HFD are the untreated "
+    "normal-diet and high-fat-diet groups.")
+
+fig(os.path.expanduser("~/vault/kjm/hiseq/figures/fig4d_top_args_heatmap.png"), 6.6, "Supplementary Figure S4",
+    "<b>Supplementary Fig. S4. Individual ARGs with the largest changes.</b> "
+    "Heatmap of mean read-level abundance (ARG copies per 16S rRNA gene copy; CARD protein homolog models "
+    "only) for the 25 ARGs with the largest change in group mean between T0h and T72h in any "
+    "antibiotic-treated group, shown for every group and timepoint (n = 3 mice each). Descriptive; "
+    "no statistical test was applied.")
 
 
 def table(df, title, legend, maxrows=None, fontsize=7, landscape_page=False, colw=None):

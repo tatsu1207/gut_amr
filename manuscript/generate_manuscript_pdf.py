@@ -169,7 +169,8 @@ def build_pdf():
 
         # Check if this is a section head
         is_section = any(line.startswith(s) for s in section_heads)
-        is_subsection = any(line.startswith(s) for s in subsection_heads)
+        # headings never end with a full stop; body paragraphs that merely start with a heading's words do
+        is_subsection = any(line.startswith(s) for s in subsection_heads) and not line.endswith('.')
 
         if is_section:
             if line == 'Results':
@@ -224,7 +225,7 @@ def build_pdf():
             if j < len(lines):
                 next_line = lines[j].strip()
                 next_is_head = (any(next_line.startswith(s) for s in section_heads) or
-                                any(next_line.startswith(s) for s in subsection_heads))
+                                (any(next_line.startswith(s) for s in subsection_heads) and not next_line.endswith('.')))
                 if next_is_head:
                     # Insert figures for this subsection
                     for sub_key, fig_list in fig_insert.items():

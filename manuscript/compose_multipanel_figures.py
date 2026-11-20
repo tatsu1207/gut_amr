@@ -19,13 +19,15 @@ GAP = 40              # px between panels and rows
 
 FIGS = {
     MF + "fig3_combined.png": [
-        [("A", MF + "taxonomy_stacked_bars.png")],
-        [("B", MF + "genus_trajectories.png"), ("C", MF + "genus_heatmap.png")],
+        # former panel A (stacked bars by group x timepoint) is now Supplementary Fig. S3
+        [("A", MF + "genus_trajectories.png"), ("B", MF + "genus_heatmap.png")],
     ],
     HF + "fig4_combined.png": [
-        [("A", HF + "fig4a_total_arg.png"), ("E", HF + "fig4e_hfd_vs_nd_arg.png")],
+        [("A", HF + "fig4a_total_arg.png")],
         [("B", HF + "fig4b_arg_class_composition.png")],
-        [("C", HF + "fig4c_arg_foldchange_heatmap.png"), ("D", HF + "fig4d_top_args_heatmap.png")],
+        [("C", HF + "fig4c_arg_foldchange_heatmap.png")],
+        # former panels: D (top-25 gene heatmap) is now Supplementary Fig. S3; E (diet bars) was
+        # merged into A, which now plots ND and HFD side by side.
     ],
     HF + "fig5_combined.png": [
         [("A", HF + "fig5a_assembly_arg_classes.png"), ("B", HF + "fig5b_top_arg_genera.png"),
