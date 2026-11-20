@@ -149,6 +149,26 @@ for s in samples:
     # Non-ARG samples (B_ob, D0_, HD/ND 2nd experiment)
     rows.append([s, "other", "NA", "NA", "NA", "NA", "NA", "NA", "NA"])
 
+# Untreated CTL/HFD mice have two 16S sample sets at T24h, T72h and S72h: the original set
+# (sequenced with the treated groups, flowcells KB58F/KC2KW) and a time-first-named set sequenced on
+# flowcell K7HLN with the Early cohort. Pairs are not technical replicates (Bray-Curtis 0.57-1.0).
+# Keep one sample per mouse and timepoint (decided 2026-11-20):
+#   T24h, T72h: original set (same runs as the treated groups) -> drop the K7HLN copies;
+#   S72h: K7HLN set -> drop the original set, which is faulty (CTL1-4 contain rumen/human taxa found
+#         in no other sample; median within-group Bray-Curtis 0.96-0.97 vs 0.55-0.77 elsewhere).
+EXCLUDE = [(re.compile(r"ARG_(T24h|T72h)_(CTL|HFD)\d+$"), "duplicate of original-set sample (run K7HLN)"),
+           (re.compile(r"ARG_(CTL|CSL|HFD)\d+_S72h$"), "faulty original S72h sample; K7HLN sample used")]
+excluded = []
+for r in rows:
+    if r[1] == "ARG":
+        for rx, why in EXCLUDE:
+            if rx.match(r[0]):
+                r[1] = "ARG_excluded"; excluded.append((r[0], why)); break
+with open("/home/unnot/vault/kjm/miseq/dada2_output/excluded_samples.tsv", "w") as f:
+    f.write("sample_id\treason\n")
+    for s, why in sorted(excluded):
+        f.write(f"{s}\t{why}\n")
+
 # Write output
 outfile = "/home/unnot/vault/kjm/miseq/dada2_output/metadata.tsv"
 with open(outfile, "w") as f:

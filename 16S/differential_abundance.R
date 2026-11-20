@@ -20,7 +20,9 @@ meta <- read.delim("/home/unnot/vault/kjm/miseq/dada2_output/metadata.tsv",
                    row.names = 1, check.names = FALSE)
 
 # Filter to ARG experiment
-meta_arg <- meta[meta$experiment %in% c("ARG", "ARG_D0"), ]
+main_groups <- c("CTL","HFD","AMX_CTL","AMX_HFD","CIP_CTL","CIP_HFD","ERY_CTL","ERY_HFD")
+# main experiment, the eight study groups only (Early cohorts, ARG_D0 batch and excluded duplicates out; 2026-11-20)
+meta_arg <- meta[meta$experiment == "ARG" & meta$group %in% main_groups, ]
 shared_samples <- intersect(colnames(asv), rownames(meta_arg))
 asv_arg <- asv[, shared_samples]
 meta_arg <- meta_arg[shared_samples, ]
@@ -147,7 +149,8 @@ for (abx in antibiotics) {
 # Summary table of all significant results
 # ============================================================
 if (length(all_results) > 0) {
-  combined <- do.call(rbind, all_results)
+  common <- Reduce(intersect, lapply(all_results, names))  # per-comparison column names differ (rab.win.<group>)
+  combined <- do.call(rbind, lapply(all_results, function(x) x[, common]))
   sig_all <- combined[combined$wi.eBH < 0.05, ]
   if (nrow(sig_all) > 0) {
     sig_summary <- sig_all[, c("ASV_ID", "antibiotic", "comparison",

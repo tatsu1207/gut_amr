@@ -26,6 +26,9 @@ plt.rcParams.update({"font.family": "Arial", "font.size": 9, "axes.spines.top": 
 d = pd.read_csv(ASV, sep="\t", index_col=0)
 if d.shape[0] > d.shape[1]:
     d = d.T                      # samples as rows
+_meta = pd.read_csv("/home/unnot/vault/kjm/miseq/dada2_output/metadata.tsv", sep="\t", index_col=0)
+_use = _meta.index[(_meta.experiment == "ARG") & _meta.group.isin(GROUPS)]
+d = d.loc[d.index.intersection(_use)]   # study samples only; excluded duplicates out (2026-11-20)
 counts = d.values.astype(int)
 depths = d.sum(axis=1).values
 keep = depths >= 5000

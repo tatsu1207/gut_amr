@@ -1,0 +1,49 @@
+sample_id	reason
+ARG_CTL1_S72h	faulty original S72h sample; K7HLN sample used
+ARG_CTL2_S72h	faulty original S72h sample; K7HLN sample used
+ARG_CTL3_S72h	faulty original S72h sample; K7HLN sample used
+ARG_CTL4_S72h	faulty original S72h sample; K7HLN sample used
+ARG_CTL5_S72h	faulty original S72h sample; K7HLN sample used
+ARG_CTL6_S72h	faulty original S72h sample; K7HLN sample used
+ARG_CTL7_S72h	faulty original S72h sample; K7HLN sample used
+ARG_CTL8_S72h	faulty original S72h sample; K7HLN sample used
+ARG_CTL9_S72h	faulty original S72h sample; K7HLN sample used
+ARG_HFD1_S72h	faulty original S72h sample; K7HLN sample used
+ARG_HFD2_S72h	faulty original S72h sample; K7HLN sample used
+ARG_HFD3_S72h	faulty original S72h sample; K7HLN sample used
+ARG_HFD4_S72h	faulty original S72h sample; K7HLN sample used
+ARG_HFD5_S72h	faulty original S72h sample; K7HLN sample used
+ARG_HFD6_S72h	faulty original S72h sample; K7HLN sample used
+ARG_HFD7_S72h	faulty original S72h sample; K7HLN sample used
+ARG_T24h_CTL1	duplicate of original-set sample (run K7HLN)
+ARG_T24h_CTL2	duplicate of original-set sample (run K7HLN)
+ARG_T24h_CTL3	duplicate of original-set sample (run K7HLN)
+ARG_T24h_CTL4	duplicate of original-set sample (run K7HLN)
+ARG_T24h_CTL5	duplicate of original-set sample (run K7HLN)
+ARG_T24h_CTL6	duplicate of original-set sample (run K7HLN)
+ARG_T24h_CTL7	duplicate of original-set sample (run K7HLN)
+ARG_T24h_CTL8	duplicate of original-set sample (run K7HLN)
+ARG_T24h_CTL9	duplicate of original-set sample (run K7HLN)
+ARG_T24h_HFD1	duplicate of original-set sample (run K7HLN)
+ARG_T24h_HFD2	duplicate of original-set sample (run K7HLN)
+ARG_T24h_HFD3	duplicate of original-set sample (run K7HLN)
+ARG_T24h_HFD4	duplicate of original-set sample (run K7HLN)
+ARG_T24h_HFD5	duplicate of original-set sample (run K7HLN)
+ARG_T24h_HFD6	duplicate of original-set sample (run K7HLN)
+ARG_T24h_HFD7	duplicate of original-set sample (run K7HLN)
+ARG_T72h_CTL1	duplicate of original-set sample (run K7HLN)
+ARG_T72h_CTL2	duplicate of original-set sample (run K7HLN)
+ARG_T72h_CTL3	duplicate of original-set sample (run K7HLN)
+ARG_T72h_CTL4	duplicate of original-set sample (run K7HLN)
+ARG_T72h_CTL5	duplicate of original-set sample (run K7HLN)
+ARG_T72h_CTL6	duplicate of original-set sample (run K7HLN)
+ARG_T72h_CTL7	duplicate of original-set sample (run K7HLN)
+ARG_T72h_CTL8	duplicate of original-set sample (run K7HLN)
+ARG_T72h_CTL9	duplicate of original-set sample (run K7HLN)
+ARG_T72h_HFD1	duplicate of original-set sample (run K7HLN)
+ARG_T72h_HFD2	duplicate of original-set sample (run K7HLN)
+ARG_T72h_HFD3	duplicate of original-set sample (run K7HLN)
+ARG_T72h_HFD4	duplicate of original-set sample (run K7HLN)
+ARG_T72h_HFD5	duplicate of original-set sample (run K7HLN)
+ARG_T72h_HFD6	duplicate of original-set sample (run K7HLN)
+ARG_T72h_HFD7	duplicate of original-set sample (run K7HLN)

@@ -16,7 +16,9 @@ tax <- read.delim("/home/unnot/vault/kjm/miseq/dada2_output/taxonomy.tsv",
 meta <- read.delim("/home/unnot/vault/kjm/miseq/dada2_output/metadata.tsv",
                    row.names = 1, check.names = FALSE)
 
-meta_arg <- meta[meta$experiment %in% c("ARG", "ARG_D0"), ]
+main_groups <- c("CTL","HFD","AMX_CTL","AMX_HFD","CIP_CTL","CIP_HFD","ERY_CTL","ERY_HFD")
+# main experiment, the eight study groups only (Early cohorts, ARG_D0 batch and excluded duplicates out; 2026-11-20)
+meta_arg <- meta[meta$experiment == "ARG" & meta$group %in% main_groups, ]
 shared <- intersect(colnames(asv), rownames(meta_arg))
 asv_arg <- asv[, shared]
 meta_arg <- meta_arg[shared, ]

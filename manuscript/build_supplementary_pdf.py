@@ -74,7 +74,7 @@ def fig(path, w_in, title, legend):
 
 fig(f"{FIGM}/figS1_rarefaction.png", 6.3, "Supplementary Figure S1",
     "<b>Supplementary Fig. S1. Sequencing depth and rarefaction.</b> "
-    "(a) Rarefaction curves for a random subset of 150 of the 498 retained samples, showing expected "
+    "(a) Rarefaction curves for a random subset of 150 of the 451 retained samples, showing expected "
     "ASV richness as a function of sequencing depth; the dashed line marks the rarefaction depth of "
     "5,159 reads used for alpha diversity. (b) Distribution of library sizes across all retained "
     "samples. Samples with fewer than 5,000 reads were excluded before rarefaction.")
