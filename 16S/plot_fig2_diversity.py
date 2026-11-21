@@ -32,9 +32,9 @@ XPRE = -1.4   # x position of the pre-diet points (T0 = 0)
 
 def add_prediet(ax, col):
     """Pre-diet ND/HFD means +/- SEM, open markers, with an axis-break mark before T0."""
-    for diet, c, off in (("ND", GROUP_COLORS["CTL"], -0.12), ("HFD", GROUP_COLORS["HFD"], 0.12)):
+    for diet, c, off in (("ND", "#555555", -0.12), ("HFD", "#555555", 0.12)):
         v = prediet[prediet["diet"] == diet][col]
-        ax.errorbar(XPRE + off, v.mean(), yerr=v.sem(), marker="o", mfc="white", mec=c, mew=1.4,
+        ax.errorbar(XPRE + off, v.mean(), yerr=v.sem(), marker="o", mfc=("white" if diet == "ND" else c), mec=c, mew=1.4,
                     color=c, capsize=3, markersize=6, linestyle="none", label=f"Pre-diet, {diet}")
     ax.axvline(x=-0.7, color="gray", linestyle=":", alpha=0.6, linewidth=0.8)
     ax.text(-0.7, 1.0, "13-wk diet", transform=ax.get_xaxis_transform(), ha="center", va="bottom",
@@ -48,20 +48,16 @@ alpha = alpha[alpha['group'].isin(GROUPS)].copy()
 pcoa = pcoa[pcoa['group'].isin(GROUPS)].copy()
 bc_base = bc_base[bc_base['group'].isin(GROUPS)].copy()
 
-# Color scheme: ND=blue shades, HFD=red shades
-GROUP_COLORS = {
-    'CTL': '#3498db', 'HFD': '#e74c3c',
-    'AMX_CTL': '#2980b9', 'AMX_HFD': '#c0392b',
-    'CIP_CTL': '#1abc9c', 'CIP_HFD': '#e67e22',
-    'ERY_CTL': '#9b59b6', 'ERY_HFD': '#f39c12',
-}
-
-GROUP_MARKERS = {
-    'CTL': 'o', 'HFD': 'o',
-    'AMX_CTL': 's', 'AMX_HFD': 's',
-    'CIP_CTL': '^', 'CIP_HFD': '^',
-    'ERY_CTL': 'D', 'ERY_HFD': 'D',
-}
+# Style (same scheme as Fig. 3A): colour = antibiotic (Okabe-Ito); A, B, D: HFD solid line + filled
+# marker, ND dashed line + open marker; C: circles = ND, triangles = HFD.
+ABX_COL = {"None": "#555555", "AMX": "#E69F00", "CIP": "#0072B2", "ERY": "#009E73"}
+def gabx(g): return g.split("_")[0] if "_" in g else "None"
+def gdiet(g): return "HFD" if g.endswith("HFD") else "ND"
+def line_style(g):
+    d = gdiet(g); c = ABX_COL[gabx(g)]
+    return dict(color=c, mec=c, mfc=(c if d == "HFD" else "white"), marker="o", mew=1.2,
+                linestyle=("-" if d == "HFD" else "--"), linewidth=1.5, capsize=2.5, markersize=5)
+DX = {"ND": -0.07, "HFD": 0.07}   # nudge ND/HFD apart so error bars do not overlap
 
 # ═══════════════════════════════════════════════════════
 # Fig 2: 4-panel figure
@@ -78,10 +74,8 @@ for group in GROUPS:
     valid = grouped.dropna()
     if len(valid) == 0:
         continue
-    x = [TP_ORDER.index(t) for t in valid.index]
-    ax.errorbar(x, valid['mean'], yerr=valid['sem'],
-                marker=GROUP_MARKERS[group], color=GROUP_COLORS[group],
-                label=group, linewidth=1.5, capsize=3, markersize=5)
+    x = [TP_ORDER.index(t) + DX[gdiet(group)] for t in valid.index]
+    ax.errorbar(x, valid['mean'], yerr=valid['sem'], label=group, **line_style(group))
 
 add_prediet(ax, "shannon")
 ax.set_xticks([XPRE] + list(range(len(TP_ORDER))))
@@ -93,7 +87,6 @@ ax.text(1.5, ax.get_ylim()[1]*0.98, 'Treatment', ha='center', fontsize=8, color=
 ax.text(5.0, ax.get_ylim()[1]*0.98, 'Recovery', ha='center', fontsize=8, color='gray')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-ax.legend(fontsize=6, ncol=2, loc='lower left', framealpha=0.9)
 
 # ── Panel B: Observed ASVs (richness) over time ──
 ax = axes[0, 1]
@@ -103,10 +96,8 @@ for group in GROUPS:
     valid = grouped.dropna()
     if len(valid) == 0:
         continue
-    x = [TP_ORDER.index(t) for t in valid.index]
-    ax.errorbar(x, valid['mean'], yerr=valid['sem'],
-                marker=GROUP_MARKERS[group], color=GROUP_COLORS[group],
-                label=group, linewidth=1.5, capsize=3, markersize=5)
+    x = [TP_ORDER.index(t) + DX[gdiet(group)] for t in valid.index]
+    ax.errorbar(x, valid['mean'], yerr=valid['sem'], label=group, **line_style(group))
 
 add_prediet(ax, "richness")
 ax.set_xticks([XPRE] + list(range(len(TP_ORDER))))
@@ -116,7 +107,6 @@ ax.set_title("B) Richness (observed ASVs)", fontweight='bold')
 ax.axvline(x=3.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-ax.legend(fontsize=6, ncol=2, loc='lower left', framealpha=0.9)
 
 # ── Panel C: PCoA (Bray-Curtis) at T72h ──
 ax = axes[1, 0]
@@ -127,16 +117,15 @@ pct1, pct2 = var_exp[0], var_exp[1]
 
 for group in GROUPS:
     sub = pcoa[pcoa['group'] == group]
-    ax.scatter(sub['PCoA1'], sub['PCoA2'],
-               c=GROUP_COLORS[group], marker=GROUP_MARKERS[group],
-               label=group, s=30, alpha=0.7, edgecolors='white', linewidth=0.3)
+    ax.scatter(sub['PCoA1'], sub['PCoA2'], c=ABX_COL[gabx(group)],
+               marker=("o" if gdiet(group) == "ND" else "^"),
+               label=group, s=30, alpha=0.75, edgecolors='white', linewidth=0.3)
 
 ax.set_xlabel(f"PCoA1 ({pct1:.1f}%)")
 ax.set_ylabel(f"PCoA2 ({pct2:.1f}%)")
 ax.set_title("C) PCoA (Bray-Curtis, all timepoints except R7)", fontweight='bold')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-ax.legend(fontsize=6, ncol=2, loc='best', framealpha=0.9)
 
 # ── Panel D: Bray-Curtis dissimilarity from baseline ──
 ax = axes[1, 1]
@@ -148,10 +137,8 @@ for group in GROUPS:
     valid = grouped.dropna()
     if len(valid) == 0:
         continue
-    x = [TP_ORDER.index(t) for t in valid.index]
-    ax.errorbar(x, valid['mean'], yerr=valid['sem'],
-                marker=GROUP_MARKERS[group], color=GROUP_COLORS[group],
-                label=group, linewidth=1.5, capsize=3, markersize=5)
+    x = [TP_ORDER.index(t) + DX[gdiet(group)] for t in valid.index]
+    ax.errorbar(x, valid['mean'], yerr=valid['sem'], label=group, **line_style(group))
 
 ax.set_xticks(range(len(TP_ORDER)))
 ax.set_xticklabels(TP_ORDER, rotation=45, ha='right')
@@ -160,9 +147,16 @@ ax.set_title("D) Community displacement from baseline", fontweight='bold')
 ax.axvline(x=3.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
-ax.legend(fontsize=6, ncol=2, loc='lower right', framealpha=0.9)
 
 plt.tight_layout()
+from matplotlib.lines import Line2D
+_h = [Line2D([], [], color=c, lw=3, label=("No antibiotic" if a == "None" else a)) for a, c in ABX_COL.items()]
+_h += [Line2D([], [], color="black", lw=1.5, ls="-", marker="o", mfc="black", label="HFD"),
+       Line2D([], [], color="black", lw=1.5, ls="--", marker="o", mfc="white", label="ND"),
+       Line2D([], [], color="black", ls="none", marker="o", label="C: ND"),
+       Line2D([], [], color="black", ls="none", marker="^", label="C: HFD")]
+fig.legend(handles=_h, loc="upper center", bbox_to_anchor=(0.5, 0.0), ncol=8, fontsize=9, frameon=False,
+           handlelength=2.6, columnspacing=1.2)
 plt.savefig(f"{OUTDIR}/fig2_diversity.pdf")
 plt.savefig(f"{OUTDIR}/fig2_diversity.png")
 plt.close()
