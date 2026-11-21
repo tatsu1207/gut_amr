@@ -157,5 +157,16 @@ for nm, v in [("MLS", mls), ("tetracycline", tet), ("beta-lactam", beta)]:
 other = mls - lmrd
 r, p = spearmanr(gen.loc["Lactococcus", common], lmrd[common]); P(f"  rho Lactococcus ~ lmrD {r:+.2f} p={p:.2g}")
 r, p = spearmanr(gen.loc["Lactococcus", common], other[common]); P(f"  rho Lactococcus ~ other MLS {r:+.2f} p={p:.2g}")
+# --- amoxicillin: per-mouse class totals and what the penicillin beta-lactam signal consists of (added 2026-11-21)
+AMXM = ["AC6", "AC7", "AC8", "AH3", "AH4", "AH5"]
+def cls_sum(pat, m, tp): return pg[pg.drug_class.str.contains(pat, na=False)][f"ARG_{m}_{tp}"].sum()
+for nm, pat in [("MLS", "macrolide|lincosamide|streptogramin"), ("beta-lactam", "penicillin beta-lactam|cephalosporin|carbapenem|monobactam")]:
+    P(f"AMX per mouse {nm} T0h -> T72h: " + ", ".join(f"{m} {cls_sum(pat, m, 'T0h'):.4f}->{cls_sum(pat, m, 'T72h'):.4f}" for m in AMXM))
+pb = pg[pg.drug_class.str.contains("penicillin beta-lactam", na=False)]
+sd = pb[[f"ARG_{m}_SD14" for m in AMXM]].mean(axis=1)
+mech = sd.groupby(pb.resistance_mechanism).sum(); mech = mech / mech.sum() * 100
+P("AMX SD14 penicillin beta-lactam signal by mechanism (%): " + ", ".join(f"{k} {v:.1f}" for k, v in mech.items()))
+ac7 = pg.set_index("gene_name")["ARG_AC7_T72h"]
+P(f"AC7_T72h total {ac7.sum():.3f}; qnrD1+qnrD2 share {100 * (ac7.get('QnrD1', 0) + ac7.get('QnrD2', 0)) / ac7.sum():.1f}%")
 print("\n".join(out))
 open(f"{H}readlevel_stats_{LEVEL}.txt", "w").write("\n".join(out) + "\n")
