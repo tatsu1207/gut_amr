@@ -97,33 +97,45 @@ grp_colors = {
 # Fig 4A: Total ARG abundance, ND and HFD side by side for each antibiotic and timepoint
 # (replaces the former Fig 4E diet panel, which replotted the same values)
 # ============================================================
-DIET_COL = {'ND': '#4477AA', 'HFD': '#CC6677'}
+# Same scheme as Figs 1-3, 5E and 6: colour = antibiotic (Okabe-Ito), ND light fill + open circles,
+# HFD solid fill + filled triangles. Log y-axis: one AMX_CTL mouse at T3 (1.58) is 60x the smallest
+# group mean, and on a linear axis every other group was squeezed into the bottom sixth of the panel.
+ABX_COL = {'None': '#555555', 'AMX': '#E69F00', 'CIP': '#0072B2', 'ERY': '#009E73'}
 PAIRS = [('CTL', 'HFD', 'None'), ('AMX_CTL', 'AMX_HFD', 'AMX'),
          ('CIP_CTL', 'CIP_HFD', 'CIP'), ('ERY_CTL', 'ERY_HFD', 'ERY')]
 fig, ax = plt.subplots(figsize=(11, 4.8))
 rng = np.random.default_rng(1)
+BASE = 0.01            # bar floor on the log axis (below every observed value)
 pos, xt, xl, tp_mid = 0.0, [], [], []
 for tp in tp_order:
     start = pos
     for nd_g, hfd_g, abx in PAIRS:
+        c = ABX_COL[abx]
         for off, g, diet in ((-0.2, nd_g, 'ND'), (0.2, hfd_g, 'HFD')):
             vals = df[(df['timepoint'] == tp) & (df['group'] == g)]['total_ARG']
-            ax.bar(pos + off, vals.mean(), width=0.38, color=DIET_COL[diet], edgecolor='black', linewidth=0.5)
-            ax.errorbar(pos + off, vals.mean(), yerr=vals.std(), fmt='none', color='black', capsize=2.5, linewidth=0.9)
-            ax.scatter(pos + off + rng.uniform(-0.06, 0.06, len(vals)), vals, color='black', s=10, zorder=5, alpha=0.7)
-        xt.append(pos); xl.append(abx); pos += 1
+            m = vals.mean()
+            ax.bar(pos + off, m - BASE, bottom=BASE, width=0.38, color=c,
+                   alpha=(0.9 if diet == 'HFD' else 0.3), edgecolor=c, linewidth=1.2)
+            ax.errorbar(pos + off, m, yerr=[[min(vals.std(), m - BASE * 1.05)], [vals.std()]], fmt='none',
+                        color='black', capsize=2.5, linewidth=0.9)
+            ax.scatter(pos + off + rng.uniform(-0.06, 0.06, len(vals)), vals, s=16, zorder=5,
+                       marker=('^' if diet == 'HFD' else 'o'), facecolor=(c if diet == 'HFD' else 'white'),
+                       edgecolor='black', linewidth=0.6)
+        xt.append(pos); xl.append('CTL' if abx == 'None' else abx); pos += 1
     tp_mid.append((start + pos - 1) / 2); pos += 0.7
+ax.set_yscale('log'); ax.set_ylim(BASE, 3)
+ax.set_yticks([0.01, 0.03, 0.1, 0.3, 1]); ax.set_yticklabels(["0.01", "0.03", "0.1", "0.3", "1"])
 ax.set_xticks(xt); ax.set_xticklabels(xl, fontsize=9)
 for m, tp in zip(tp_mid, tp_order):
     ax.text(m, -0.12, tp, transform=ax.get_xaxis_transform(), ha='center', va='top', fontsize=11, fontweight='bold')
-ax.set_ylabel("Total ARG abundance\n(copies / 16S rRNA gene copy)", fontsize=10)
-ax.set_ylim(bottom=0)  # SD bars of skewed n = 3 groups would otherwise run below zero
+ax.set_ylabel("Total ARG abundance\n(copies / 16S rRNA gene copy, log scale)", fontsize=10)
 from matplotlib.patches import Patch
-ax.legend(handles=[Patch(facecolor=DIET_COL['ND'], edgecolor='black', label='Normal diet (ND)'),
-                   Patch(facecolor=DIET_COL['HFD'], edgecolor='black', label='High-fat diet (HFD)')],
-          fontsize=9, loc='upper left', frameon=False)
+ax.legend(handles=[Patch(facecolor=c, edgecolor=c, label=('No antibiotic' if a_ == 'None' else a_)) for a_, c in ABX_COL.items()]
+          + [Patch(facecolor='#bbbbbb', alpha=0.4, edgecolor='#555555', label='ND (light fill, open circles)'),
+             Patch(facecolor='#555555', edgecolor='#555555', label='HFD (solid fill, triangles)')],
+          fontsize=8.5, loc='upper left', frameon=False, ncol=6, bbox_to_anchor=(0, 1.02), columnspacing=1.0)
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
-ax.set_title("Total ARG abundance by diet, antibiotic and timepoint", fontsize=12, fontweight='bold')
+ax.set_title("Total ARG abundance per sample", fontsize=12, fontweight='bold', pad=14)
 plt.tight_layout()
 fig.savefig(OUT / "fig4a_total_arg.png", dpi=300, bbox_inches='tight')
 fig.savefig(OUT / "fig4a_total_arg.pdf", bbox_inches='tight')
@@ -139,9 +151,11 @@ import sys as _s; _s.path.insert(0, "/home/unnot/vault/kjm/hiseq")
 from class_categories import categorise, ORDER as CAT_ORDER, MULTI
 cat = categorise(pergene, list(df.index))
 assert np.allclose(cat.sum(axis=1), df['total_ARG'])
-CAT_COL = {"tetracycline": "#88CCEE", "lincosamide": "#AA4499", "macrolide": "#CC6677",
-           "streptogramin": "#882255", "pleuromutilin": "#DDCC77", "glycopeptide": "#117733",
-           "fluoroquinolone": "#332288", "beta-lactam": "#E69F00", "aminoglycoside": "#44AA99",
+# Class palette deliberately avoids the Okabe-Ito antibiotic hues used for AMX/CIP/ERY elsewhere
+# (orange #E69F00, blue #0072B2, green #009E73), which label the groups on this panel's x-axis.
+CAT_COL = {"tetracycline": "#7FB3D5", "lincosamide": "#AA4499", "macrolide": "#CC6677",
+           "streptogramin": "#882255", "pleuromutilin": "#F0E442", "glycopeptide": "#7E6148",
+           "fluoroquinolone": "#332288", "beta-lactam": "#D55E00", "aminoglycoside": "#80CDC1",
            "phenicol": "#999933", "peptide": "#DDDDDD", "other": "#AAAAAA", MULTI: "#444444"}
 cats = [c for c in CAT_ORDER if cat[c].max() > 0]
 
