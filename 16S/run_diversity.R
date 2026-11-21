@@ -111,6 +111,19 @@ cat("PCoA axes: PC1=", eig_pct[1], "%, PC2=", eig_pct[2], "%, PC3=", eig_pct[3],
 write.csv(data.frame(axis=1:length(eig_pct), variance_pct=eig_pct),
           file.path(outdir, "pcoa_eigenvalues.csv"), row.names=FALSE)
 
+# PCoA without R7 (SD7) for Fig. 2C (2026-11-21): R7 was sequenced alone on a failed run (KDFCK);
+# same rarefied table and Bray-Curtis distances, R7 samples dropped before ordination.
+keep7 <- meta_filt$sample_id[meta_filt$timepoint != "SD7"]
+keep7 <- intersect(labels(bc_dist), keep7)
+bc7 <- as.dist(as.matrix(bc_dist)[keep7, keep7])
+p7 <- cmdscale(bc7, k=3, eig=TRUE)
+e7 <- round(p7$eig / sum(p7$eig[p7$eig > 0]) * 100, 1)
+p7df <- merge(data.frame(sample_id=rownames(p7$points), PCoA1=p7$points[,1], PCoA2=p7$points[,2],
+                         PCoA3=p7$points[,3], stringsAsFactors=FALSE), meta_filt, by="sample_id")
+write.csv(p7df, file.path(outdir, "pcoa_bray_curtis_noR7.csv"), row.names=FALSE)
+write.csv(data.frame(axis=1:length(e7), variance_pct=e7), file.path(outdir, "pcoa_eigenvalues_noR7.csv"), row.names=FALSE)
+cat("PCoA without R7:", length(keep7), "samples; PC1=", e7[1], "%, PC2=", e7[2], "%\n")
+
 # PERMANOVA by group at each timepoint
 cat("\nPERMANOVA by group at each timepoint:\n")
 timepoints <- unique(meta_filt$timepoint)

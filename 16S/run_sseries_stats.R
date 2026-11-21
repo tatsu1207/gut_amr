@@ -39,8 +39,13 @@ meta$group <- factor(meta$group)
 meta$diet  <- factor(meta$diet)
 
 # ---- S1: mixed model, mouse as random effect ----
-cat("\n=== S1: linear mixed model, Shannon ~ group * timepoint + (1|mouse) ===\n")
-m <- lmer(shannon ~ group * timepoint + (1|mouse_uid), data=meta, REML=TRUE)
+cat("\n=== S1: linear mixed model, Shannon ~ group * timepoint + (1|mouse), R7 excluded ===\n")
+# R7 (SD7) excluded (2026-11-21): sequenced alone on run KDFCK, which failed (33% of reads passed
+# filtering; untreated mice lost two thirds of their ASVs at R7 only). Rarefaction above still uses the
+# full sample set, so every other result is unchanged.
+mm <- droplevels(meta[meta$timepoint != "SD7", ])
+cat("mixed model samples (R7 excluded):", nrow(mm), "\n")
+m <- lmer(shannon ~ group * timepoint + (1|mouse_uid), data=mm, REML=TRUE)
 an <- anova(m)
 print(an)
 write.table(data.frame(term=rownames(an), an), file.path(OUT,"mixed_model_shannon_anova.tsv"),

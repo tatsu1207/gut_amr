@@ -19,8 +19,10 @@ DIVDIR = "/home/unnot/vault/kjm/miseq/dada2_output/diversity"
 OUTDIR = "/home/unnot/vault/kjm/miseq/dada2_output/figures"
 
 alpha = pd.read_csv(f"{DIVDIR}/alpha_diversity.csv")
-pcoa = pd.read_csv(f"{DIVDIR}/pcoa_bray_curtis.csv")
-eigen = pd.read_csv(f"{DIVDIR}/pcoa_eigenvalues.csv")
+# R7 (SD7) is left out of every panel (2026-11-21): it was sequenced alone on a failed MiSeq run (KDFCK),
+# and untreated mice lost two thirds of their ASVs at R7 only. PCoA recomputed without R7 by run_diversity.R.
+pcoa = pd.read_csv(f"{DIVDIR}/pcoa_bray_curtis_noR7.csv")
+eigen = pd.read_csv(f"{DIVDIR}/pcoa_eigenvalues_noR7.csv")
 bc_base = pd.read_csv(f"{DIVDIR}/bc_from_baseline.csv")
 # Pre-diet baseline (diet start, before HFD feeding; ARG_D0_* samples, 16 per diet assignment),
 # rarefied to the same 5,159 reads by miseq/d0_baseline.R. Shown left of T0 in panels A and B.
@@ -40,7 +42,7 @@ def add_prediet(ax, col):
 
 # Filter to main 8 groups
 GROUPS = ['CTL', 'HFD', 'AMX_CTL', 'AMX_HFD', 'CIP_CTL', 'CIP_HFD', 'ERY_CTL', 'ERY_HFD']
-TP_ORDER = ['T0h', 'T6h', 'T24h', 'T72h', 'S72h', 'SD7', 'SD10', 'SD14']
+TP_ORDER = ['T0h', 'T6h', 'T24h', 'T72h', 'S72h', 'SD10', 'SD14']   # R7 omitted (failed run)
 
 alpha = alpha[alpha['group'].isin(GROUPS)].copy()
 pcoa = pcoa[pcoa['group'].isin(GROUPS)].copy()
@@ -88,7 +90,7 @@ ax.set_ylabel("Shannon index")
 ax.set_title("A) Shannon diversity", fontweight='bold')
 ax.axvline(x=3.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
 ax.text(1.5, ax.get_ylim()[1]*0.98, 'Treatment', ha='center', fontsize=8, color='gray')
-ax.text(5.5, ax.get_ylim()[1]*0.98, 'Recovery', ha='center', fontsize=8, color='gray')
+ax.text(5.0, ax.get_ylim()[1]*0.98, 'Recovery', ha='center', fontsize=8, color='gray')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.legend(fontsize=6, ncol=2, loc='lower left', framealpha=0.9)
@@ -131,7 +133,7 @@ for group in GROUPS:
 
 ax.set_xlabel(f"PCoA1 ({pct1:.1f}%)")
 ax.set_ylabel(f"PCoA2 ({pct2:.1f}%)")
-ax.set_title("C) PCoA (Bray-Curtis, all timepoints)", fontweight='bold')
+ax.set_title("C) PCoA (Bray-Curtis, all timepoints except R7)", fontweight='bold')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.legend(fontsize=6, ncol=2, loc='best', framealpha=0.9)
