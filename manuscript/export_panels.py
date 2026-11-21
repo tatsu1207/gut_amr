@@ -42,7 +42,7 @@ SPLIT = [
      [("fig1A_body_weight", [0]), ("fig1B_LDL", [1]), ("fig1C_HDL", [2]),
       ("fig1D_acetate", [3]), ("fig1E_propionate", [4]), ("fig1F_butyrate", [5])]),
     (D + "plot_fig2_diversity.py", "fig2_diversity.png",
-     [("fig2A_shannon", [0]), ("fig2B_richness", [1]), ("fig2C_PCoA", [2]), ("fig2D_displacement", [3])]),
+     [("fig2A_shannon", [0]), ("fig2B_richness", [1]), ("fig2C_PCoA_by_timepoint", [2, 3, 4]), ("fig2D_displacement", [5])]),
     (E("~/vault/kjm/hiseq/butyrate_analysis/plot_fig6_butyrate.py"), "fig6_butyrate_capacity.png",
      [("fig6A_but_trajectories", [0, 1, 2, 3]), ("fig6B_but_vs_cecal_butyrate", [4]), ("fig6C_but_by_genus", [5])]),
 ]

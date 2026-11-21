@@ -130,8 +130,9 @@ def table(df, title, legend, maxrows=None, fontsize=7, landscape_page=False, col
 
 perm = pd.read_excel(XL, sheet_name="SupplTable1_PERMANOVA")
 table(perm, "Supplementary Table 1",
-      "<b>Supplementary Table 1.</b> PERMANOVA of gut microbiome community composition among the eight "
-      "groups at each timepoint (Bray-Curtis dissimilarity, 999 permutations).")
+      "<b>Supplementary Table 1.</b> PERMANOVA of gut microbiome community composition at each timepoint "
+      "(Bray-Curtis, 999 permutations): the eight groups as one factor with PERMDISP, and a factorial model of "
+      "antibiotic, diet and their interaction (sequential terms). T6h: untreated groups only, two-group test only.", fontsize=6.5, landscape_page=True)
 
 # Supplementary Data: title and legend for each item (npj: large tables are labelled
 # "Supplementary Data N" and their titles/legends go in this PDF). Legends are read from
