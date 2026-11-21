@@ -156,6 +156,8 @@ if available_targets:
                 continue
             subset = rel_plot[rel_plot["group"].isin(valid_grps)].copy()
             subset = subset.dropna(subset=["timepoint"])
+            # R7 (SD7) omitted (2026-11-21): sequenced alone on a failed MiSeq run (KDFCK); see Methods
+            subset = subset[subset["timepoint"] != "SD7"]
             if subset.empty:
                 continue
 
@@ -182,8 +184,8 @@ if available_targets:
         ax.set_title(f"{genus} dynamics", fontsize=12, fontweight="bold")
         ax.legend(fontsize=7, loc="best")
         ax.axvspan(0, 3, alpha=0.1, color="red", label="Treatment" if ax_idx == 0 else None)
-        ax.set_xticks([XPRE, 0, 1, 3, 6, 10, 13, 17])
-        ax.set_xticklabels(["Pre-diet"] + tp_order[:1] + tp_order[2:])  # skip T6h for readability
+        ax.set_xticks([XPRE, 0, 1, 3, 6, 13, 17])
+        ax.set_xticklabels(["Pre-diet", "T0h", "T24h", "T72h", "S72h", "SD10", "SD14"])  # T6h and R7 not shown
 
     fig.suptitle("Key Genus Dynamics During Antibiotic Treatment and Recovery", fontsize=13, y=1.02)
     plt.tight_layout()
