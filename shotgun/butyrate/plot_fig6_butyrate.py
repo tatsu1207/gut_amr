@@ -16,7 +16,14 @@ T = f"{B}/tables"
 FIG = "/home/unnot/vault/kjm/hiseq/figures"
 SUB = "/home/unnot/vault/KJM_info/manuscript"
 
-ND, HFD = "#3070B8", "#CC6677"          # validated pair (chroma, CVD, contrast)
+# Same scheme as Figs 2 and 3: colour = antibiotic (Okabe-Ito); ND dashed line + open circle,
+# HFD solid line + filled triangle.
+ABX_COL = {"None": "#555555", "AMX": "#E69F00", "CIP": "#0072B2", "ERY": "#009E73"}
+BAR = "#7a7a7a"
+def gabx(g): return g.split("_")[0] if "_" in g else "None"
+def dstyle(diet, c):
+    return dict(color=c, ls=("--" if diet == "ND" else "-"), marker=("o" if diet == "ND" else "^"),
+                mfc=("white" if diet == "ND" else c), mec=c)
 INK, MUTED, GRID = "#1f1f1f", "#6b6b6b", "#e6e6e6"
 plt.rcParams.update({"font.family": "Arial", "font.size": 8, "axes.edgecolor": MUTED,
                      "axes.labelcolor": INK, "xtick.color": MUTED, "ytick.color": MUTED,
@@ -31,7 +38,7 @@ TP = ["T0h", "T72h", "SD14"]
 ABX = [("None", "No antibiotic"), ("AMX", "Amoxicillin"), ("CIP", "Ciprofloxacin"), ("ERY", "Erythromycin")]
 
 fig = plt.figure(figsize=(7.2, 9.4))  # portrait: A as 2x2 small multiples above B | C
-outer = fig.add_gridspec(2, 1, height_ratios=[1.75, 1], hspace=0.2)
+outer = fig.add_gridspec(2, 1, height_ratios=[1.75, 1], hspace=0.3)
 gs_top = outer[0].subgridspec(2, 2, wspace=0.12, hspace=0.35)
 gs_bot = outer[1].subgridspec(1, 2, wspace=0.55)
 
@@ -39,18 +46,17 @@ gs_bot = outer[1].subgridspec(1, 2, wspace=0.55)
 ymax = ab["but"].max() * 1.1
 for i, (abx, title) in enumerate(ABX):
     ax = fig.add_subplot(gs_top[i // 2, i % 2])
-    for diet, col in [("ND", ND), ("HFD", HFD)]:
+    col = ABX_COL[abx]
+    for diet in ("ND", "HFD"):
+        st = dstyle(diet, col)
         d = ab[(ab.antibiotic == abx) & (ab.diet == diet)]
         m = d.groupby("timepoint")["but"].mean().reindex(TP)
         x = np.arange(3) + (-0.06 if diet == "ND" else 0.06)
         for _, mouse in d.groupby("mouse"):
             mm = mouse.set_index("timepoint")["but"].reindex(TP)
-            ax.plot(x, mm.values, color=col, lw=0.6, alpha=0.35, zorder=1)
-        ax.plot(x, m.values, color=col, lw=2, zorder=3, solid_capstyle="round")
-        ax.scatter(x, m.values, s=22, color=col, edgecolor="white", linewidth=1, zorder=4)
-        if abx == "AMX":  # direct labels where ND/HFD are well separated (T0h)
-            ax.text(x[0] + 0.12, m.values[0] + (0.012 if diet == "HFD" else -0.018), diet,
-                    color=INK, fontsize=7, va="center")
+            ax.plot(x, mm.values, color=col, ls=st["ls"], lw=0.6, alpha=0.4, zorder=1)
+        ax.plot(x, m.values, color=col, ls=st["ls"], lw=1.8, zorder=3)
+        ax.plot(x, m.values, ls="", marker=st["marker"], ms=5.5, mfc=st["mfc"], mec=col, mew=1.2, zorder=4)
     ax.set_xticks(range(3)); ax.set_xticklabels(TP)
     ax.set_xlim(-0.3, 2.45); ax.set_ylim(0, ymax)
     ax.set_title(title, fontsize=8, color=INK, pad=4)
@@ -60,12 +66,18 @@ for i, (abx, title) in enumerate(ABX):
     else:
         ax.set_yticklabels([])
 fig.text(0.04, fig.axes[0].get_position().y1 + 0.03, "A", fontsize=11, fontweight="bold")
+_h = [plt.Line2D([], [], color="black", lw=1.5, ls="--", marker="o", mfc="white", label="ND"),
+      plt.Line2D([], [], color="black", lw=1.5, ls="-", marker="^", mfc="black", label="HFD"),
+      plt.Line2D([], [], color="black", lw=0.6, alpha=0.4, label="individual mice")]
+fig.legend(handles=_h, loc="lower center", ncol=3, fontsize=7.5, frameon=False, handlelength=2.6,
+           bbox_to_anchor=(0.5, fig.axes[2].get_position().y0 - 0.05))
 
 # ---- B: SD14 gene abundance vs measured cecal butyrate (group means) ----
 ax = fig.add_subplot(gs_bot[0, 0])
 for g, r in link.iterrows():
-    col = HFD if g.endswith("HFD") else ND
-    ax.scatter(r["but"], r["butyrate"], s=46, color=col, edgecolor="white", linewidth=1.5, zorder=3)
+    col = ABX_COL[gabx(g)]; hfd = g.endswith("HFD")
+    ax.scatter(r["but"], r["butyrate"], s=46, marker=("^" if hfd else "o"), facecolor=(col if hfd else "white"),
+               edgecolor=col, linewidth=1.3, zorder=3)
     dx, ha = (0.006, "left")
     if g in ("CIP_CTL", "ERY_HFD"):
         dx, ha = (-0.006, "right")
@@ -77,8 +89,11 @@ ax.set_xlabel("but copies per genome (shotgun, SD14)")
 ax.set_ylabel("Cecal butyrate (μM, GC)")
 ax.set_xlim(-0.01, link["but"].max() * 1.25); ax.set_ylim(-3, link["butyrate"].max() * 1.15)
 ax.grid(True, color=GRID, lw=0.5); ax.set_axisbelow(True)
-h = [plt.Line2D([], [], marker="o", ls="", color=c, label=l, markersize=6) for l, c in [("ND", ND), ("HFD", HFD)]]
-ax.legend(handles=h, frameon=False, fontsize=7, loc="lower left", bbox_to_anchor=(0.5, 0.02))
+h = [plt.Line2D([], [], marker="s", ls="", color=c, label=("No antibiotic" if a == "None" else a), markersize=6)
+     for a, c in ABX_COL.items()]
+h += [plt.Line2D([], [], marker="o", ls="", mfc="white", mec="black", label="ND", markersize=6),
+      plt.Line2D([], [], marker="^", ls="", mfc="black", mec="black", label="HFD", markersize=6)]
+ax.legend(handles=h, frameon=False, fontsize=6.5, loc="lower right", handletextpad=0.3, labelspacing=0.3)
 fig.text(0.04, ax.get_position().y1 + 0.015, "B", fontsize=11, fontweight="bold")
 
 # ---- C: genera carrying but (share of total but abundance) ----
@@ -91,7 +106,7 @@ rows = list(zip(top.genus, top.share)) + [("Other MAGs", other),
         ("Unbinned contigs", gb.loc[gb.genus == "Unbinned", "share"].sum())]
 labels, vals = zip(*rows)
 y = np.arange(len(vals))[::-1]
-colors = [ND] * len(top) + ["#a9a9a9", "#cfcfcf"]
+colors = [BAR] * len(top) + ["#a9a9a9", "#cfcfcf"]
 ax.barh(y, np.array(vals) * 100, color=colors, height=0.62, edgecolor="white", linewidth=1)
 for yi, v in zip(y, vals):
     ax.text(v * 100 + 1, yi, f"{v*100:.1f}%", va="center", fontsize=6.5, color=INK)
