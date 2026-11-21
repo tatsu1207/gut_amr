@@ -18,10 +18,15 @@ import statsmodels.formula.api as smf
 from statsmodels.stats.anova import anova_lm
 
 LEVEL = sys.argv[1] if len(sys.argv) > 1 else "homolog_only"
+# second argument "noAC7": sensitivity analysis without ARG_AC7_T72h, the AMX_CTL T3 sample dominated by
+# Enterobacterales (15.7% of pooled read-level abundance); output goes to readlevel_stats_<level>_noAC7.txt
+NOAC7 = len(sys.argv) > 2 and sys.argv[2] == "noAC7"
 H = "/home/unnot/vault/kjm/hiseq/arg_results/model_filtered/"
 D = "/home/unnot/vault/kjm/miseq/dada2_output/"
 
 pg = pd.read_csv(f"{H}arg_abundance_per_gene_{LEVEL}.tsv", sep="\t")
+if NOAC7:
+    pg = pg.drop(columns=["ARG_AC7_T72h"])
 S = [c for c in pg.columns if c.startswith("ARG_")]
 GROUP = {"AC": "AMX_CTL", "AH": "AMX_HFD", "CC": "CIP_CTL", "CH": "CIP_HFD", "EC": "ERY_CTL",
          "EH": "ERY_HFD", "CTL": "CTL", "CSL": "CTL", "HFD": "HFD"}
@@ -158,7 +163,7 @@ other = mls - lmrd
 r, p = spearmanr(gen.loc["Lactococcus", common], lmrd[common]); P(f"  rho Lactococcus ~ lmrD {r:+.2f} p={p:.2g}")
 r, p = spearmanr(gen.loc["Lactococcus", common], other[common]); P(f"  rho Lactococcus ~ other MLS {r:+.2f} p={p:.2g}")
 # --- amoxicillin: per-mouse class totals and what the penicillin beta-lactam signal consists of (added 2026-11-21)
-AMXM = ["AC6", "AC7", "AC8", "AH3", "AH4", "AH5"]
+AMXM = [m for m in ["AC6", "AC7", "AC8", "AH3", "AH4", "AH5"] if f"ARG_{m}_T72h" in pg.columns]
 def cls_sum(pat, m, tp): return pg[pg.drug_class.str.contains(pat, na=False)][f"ARG_{m}_{tp}"].sum()
 for nm, pat in [("MLS", "macrolide|lincosamide|streptogramin"), ("beta-lactam", "penicillin beta-lactam|cephalosporin|carbapenem|monobactam")]:
     P(f"AMX per mouse {nm} T0h -> T72h: " + ", ".join(f"{m} {cls_sum(pat, m, 'T0h'):.4f}->{cls_sum(pat, m, 'T72h'):.4f}" for m in AMXM))
@@ -166,7 +171,10 @@ pb = pg[pg.drug_class.str.contains("penicillin beta-lactam", na=False)]
 sd = pb[[f"ARG_{m}_SD14" for m in AMXM]].mean(axis=1)
 mech = sd.groupby(pb.resistance_mechanism).sum(); mech = mech / mech.sum() * 100
 P("AMX SD14 penicillin beta-lactam signal by mechanism (%): " + ", ".join(f"{k} {v:.1f}" for k, v in mech.items()))
-ac7 = pg.set_index("gene_name")["ARG_AC7_T72h"]
-P(f"AC7_T72h total {ac7.sum():.3f}; qnrD1+qnrD2 share {100 * (ac7.get('QnrD1', 0) + ac7.get('QnrD2', 0)) / ac7.sum():.1f}%")
+if not NOAC7:
+  ac7 = pg.set_index("gene_name")["ARG_AC7_T72h"]
+  P(f"AC7_T72h share of pooled abundance {100 * ac7.sum() / pg[S].sum().sum():.1f}%; of pooled qnrD "
+    f"{100 * (ac7.get('QnrD1', 0) + ac7.get('QnrD2', 0)) / pg[pg.gene_name.isin(['QnrD1', 'QnrD2'])][S].sum().sum():.0f}%")
+  P(f"AC7_T72h total {ac7.sum():.3f}; qnrD1+qnrD2 share {100 * (ac7.get('QnrD1', 0) + ac7.get('QnrD2', 0)) / ac7.sum():.1f}%")
 print("\n".join(out))
-open(f"{H}readlevel_stats_{LEVEL}.txt", "w").write("\n".join(out) + "\n")
+open(f"{H}readlevel_stats_{LEVEL}{'_noAC7' if NOAC7 else ''}.txt", "w").write("\n".join(out) + "\n")
