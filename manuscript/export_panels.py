@@ -32,8 +32,8 @@ COPY = {
     "figS4_top_args_heatmap": H + "fig4d_top_args_heatmap.png",
     "fig5A_assembly_arg_classes": H + "fig5a_assembly_arg_classes.png",
     "fig5B_top_arg_genera": H + "fig5b_top_arg_genera.png",
-    "fig5C_lactococcus_vs_mls": H + "fig5c_lactococcus_vs_mls.png",
-    "fig5D_genomic_context": H + "fig5d_genomic_context.png",
+    "fig5C_genomic_context": H + "fig5c_genomic_context.png",
+    "fig5D_lactococcus_vs_mls": H + "fig5d_lactococcus_vs_mls.png",
     "fig5E_assembly_args_by_diet": H + "fig5e_assembly_args_by_diet.png",
 }
 # script, name of the saved PNG to capture, panels as (name, axes indices)

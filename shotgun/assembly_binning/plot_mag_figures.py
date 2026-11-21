@@ -27,200 +27,132 @@ per_sample = pd.read_csv(f"{MAG_DIR}/table_per_sample_summary.tsv", sep="\t")
 
 
 # ═══════════════════════════════════════════════════════
-# Fig 5A: Assembly-based ARG drug class composition (pie)
+# Fig 5 style (2026-11-21): neutral greys for panels A-D (colour is reserved for the antibiotics, as in
+# Figs 1-4 and 6); E uses the shared scheme (colour = antibiotic, ND light fill, HFD solid fill).
 # ═══════════════════════════════════════════════════════
-def simplify_drug_class(dc):
-    dc = str(dc).lower()
-    if "glycopeptide" in dc:
-        return "Glycopeptide"
-    elif "nitroimidazole" in dc:
-        return "Nitroimidazole"
-    elif "tetracycline" in dc:
-        return "Tetracycline"
-    elif "rifamycin" in dc:
-        return "Rifamycin"
-    elif "macrolide" in dc or "lincosamide" in dc or "streptogramin" in dc:
-        return "MLS"
-    elif "fluoroquinolone" in dc:
-        return "Fluoroquinolone"
-    elif "beta-lactam" in dc or "cephalosporin" in dc or "carbapenem" in dc or "penicillin" in dc or "monobactam" in dc:
-        return "Beta-lactam"
-    elif "aminoglycoside" in dc:
-        return "Aminoglycoside"
-    elif "phenicol" in dc:
-        return "Phenicol"
-    elif "disinfect" in dc:
-        return "Disinfectants"
-    elif "peptide antibiotic" in dc:
-        return "Peptide"
-    elif "diaminopyrimidine" in dc:
-        return "Diaminopyrimidine"
-    elif "oxazolidinone" in dc:
-        return "Oxazolidinone"
-    else:
-        return "Other"
+_sys.path.insert(0, _os.path.expanduser("~/vault/kjm/hiseq"))
+from class_categories import is_multidrug
+from matplotlib.patches import Patch
+DARK, MID, LIGHT, PALE = "#3a3a3a", "#7a7a7a", "#b5b5b5", "#dedede"
+def clean(ax):
+    ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
 
-# Same rule as the Results text: a gene counts toward a class only if CARD assigns it that
-# single class; genes with several classes in their CARD string form their own slice.
-def single_class(dc):
-    dc = str(dc)
+full["multidrug"] = full["drug_class"].map(is_multidrug)
+LIGASE = ("vanG", "vanD", "vanC", "vanA", "vanB", "vanE", "vanL", "vanM", "vanN")
+def is_ligase(name):
+    return name in LIGASE or any(name.startswith(l + " ") for l in ("vanC",))
+
+# ── Fig 5A: drug-class composition, with the van clusters split into ligases and accessory genes ──
+def a_cat(r):
+    dc = str(r["drug_class"])
+    if dc == "glycopeptide antibiotic":
+        return "Glycopeptide: van ligase" if is_ligase(r["best_hit_ARG"]) else "Glycopeptide: van accessory/regulatory genes"
+    if r["multidrug"]:
+        return "Multidrug (>=3 class families)"
     if ";" in dc:
-        return "Multi-class"
+        return "Two classes"
+    if dc == "rifamycin antibiotic":
+        return "Rifamycin (mostly rpoC variants)"
     return dc.replace(" antibiotic", "").replace("disinfecting agents and antiseptics", "disinfectants").capitalize()
-full["simple_class"] = full["drug_class"].apply(single_class)
-class_counts = full["simple_class"].value_counts()
-
-# Merge small categories
-threshold = 200
-major = class_counts[class_counts >= threshold]
-other_sum = class_counts[class_counts < threshold].sum()
-if other_sum > 0:
-    major["Other"] = other_sum
-
-colors_pie = plt.cm.Set3(np.linspace(0, 1, len(major)))
-
-fig, ax = plt.subplots(figsize=(6, 6))
-# Small slices are labelled in a legend, not on the pie, so their labels cannot overlap.
-wedges, _ = ax.pie(
-    major.values, colors=colors_pie, startangle=90,
-    wedgeprops=dict(linewidth=0.5, edgecolor='white')
-)
-ax.legend(wedges, [f"{k} ({v:,}; {v / major.sum() * 100:.1f}%)" for k, v in major.items()],
-          loc='upper center', bbox_to_anchor=(0.5, 0.02), ncol=2, fontsize=9, frameon=False)
-ax.set_title("Assembly-based ARG drug class distribution\n(n = 17,371)", fontsize=11, fontweight='bold')
-plt.savefig(f"{OUTDIR}/fig5a_assembly_arg_classes.pdf")
-plt.savefig(f"{OUTDIR}/fig5a_assembly_arg_classes.png")
-plt.close()
-print("Fig 5A done")
-
-
-# ═══════════════════════════════════════════════════════
-# Fig 5B: Top 20 ARG-carrying genera (horizontal bar)
-# ═══════════════════════════════════════════════════════
-top20 = genus_summary.head(20).copy()
-top20 = top20.iloc[::-1]  # reverse for horizontal bar
-
+full["a_cat"] = full.apply(a_cat, axis=1)
+cc = full["a_cat"].value_counts()
+small = cc[cc < 200].sum()
+cc = cc[cc >= 200]
+order = ["Glycopeptide: van accessory/regulatory genes", "Glycopeptide: van ligase"] + \
+        [k for k in cc.index if not k.startswith("Glycopeptide")]
+cc = cc.reindex(order); cc["Other"] = small
 fig, ax = plt.subplots(figsize=(7, 6))
-colors_bar = ['#e74c3c' if g == 'Lactococcus' else '#3498db' for g in top20['genus']]
-bars = ax.barh(top20['genus'], top20['total_ARGs'], color=colors_bar, edgecolor='white', linewidth=0.5)
+y = np.arange(len(cc))[::-1]
+cols = [PALE if k.startswith("Glycopeptide: van acc") else (MID if k.startswith("Rifamycin") else DARK) for k in cc.index]
+bars = ax.barh(y, cc.values, color=cols, edgecolor=DARK, linewidth=0.6, height=0.7)
+bars[0].set_hatch("///")
+for yi, v in zip(y, cc.values):
+    ax.text(v + 150, yi, f"{v:,} ({v / len(full) * 100:.1f}%)", va="center", fontsize=9)
+ax.set_yticks(y); ax.set_yticklabels(cc.index, fontsize=9.5)
+ax.set_xlabel("ARG-carrying ORFs (n = 17,371)")
+ax.set_xlim(0, cc.max() * 1.32)
+ax.set_title("Drug class of assembly-based ARGs", fontsize=11, fontweight="bold")
+ax.text(0.98, 0.02, "Hatched: CARD glycopeptide-class genes that do not\nconfer resistance on their own (vanW, vanT, vanY, ...)",
+        transform=ax.transAxes, ha="right", va="bottom", fontsize=8, color="#555555")
+clean(ax)
+plt.savefig(f"{OUTDIR}/fig5a_assembly_arg_classes.pdf"); plt.savefig(f"{OUTDIR}/fig5a_assembly_arg_classes.png")
+plt.close(); print("Fig 5A done", dict(cc))
 
-# Add MAG counts
-for i, (_, row) in enumerate(top20.iterrows()):
-    ax.text(row['total_ARGs'] + 5, i, f"({row['n_MAGs']} MAGs)", va='center', fontsize=7, color='gray')
+# ── Fig 5B: top 20 genera by total ARGs, plotted as ARGs per MAG (bins of the same organism recur) ──
+top20 = genus_summary.head(20).copy()
+top20["per_mag"] = top20["total_ARGs"] / top20["n_MAGs"]
+top20 = top20.sort_values("per_mag")
+fig, ax = plt.subplots(figsize=(7, 6))
+ax.barh(top20["genus"], top20["per_mag"], color=MID, edgecolor="white", height=0.72)
+for i, (_, r) in enumerate(top20.iterrows()):
+    ax.text(r["per_mag"] + 0.4, i, f"{r['total_ARGs']} ARGs / {r['n_MAGs']} MAGs", va="center", fontsize=7.5, color="#555555")
+for t in ax.get_yticklabels():
+    t.set_fontstyle("italic")
+ax.set_xlabel("ARG-carrying ORFs per MAG")
+ax.set_xlim(0, top20["per_mag"].max() * 1.45)
+ax.set_title("Top 20 ARG-carrying genera (by total)", fontsize=11, fontweight="bold")
+clean(ax)
+plt.savefig(f"{OUTDIR}/fig5b_top_arg_genera.pdf"); plt.savefig(f"{OUTDIR}/fig5b_top_arg_genera.png")
+plt.close(); print("Fig 5B done")
 
-ax.set_xlabel("Total ARGs", fontsize=10)
-ax.set_title("Top 20 ARG-carrying genera\n(assembly-based)", fontsize=11, fontweight='bold')
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
+# ── Fig 5C: genomic context (geNomad) ──
+ctx = full["genomic_location"].value_counts().reindex(["chromosome", "plasmid", "phage"])
+fig, ax = plt.subplots(figsize=(5, 6))
+yy = np.arange(3)[::-1]
+ax.barh(yy, ctx.values, color=[DARK, MID, LIGHT], height=0.6)
+for yi, v in zip(yy, ctx.values):
+    ax.text(v + 250, yi, f"{v:,}\n({v / len(full) * 100:.1f}%)", va="center", fontsize=9)
+ax.set_yticks(yy); ax.set_yticklabels(["Chromosome", "Plasmid", "Phage"], fontsize=10)
+ax.set_xlim(0, ctx.max() * 1.4)
+ax.set_xlabel("ARG-carrying ORFs")
+ax.set_title("Genomic context", fontsize=11, fontweight="bold")
+clean(ax)
+plt.savefig(f"{OUTDIR}/fig5c_genomic_context.pdf"); plt.savefig(f"{OUTDIR}/fig5c_genomic_context.png")
+plt.close(); print("Fig 5C done")
 
-# Add Lactococcus annotation if in top 20
-if 'Lactococcus' in top20['genus'].values:
-    ax.annotate('Lactococcus\n(rank 39)', xy=(0, 0), fontsize=8, color='#e74c3c')
-
-plt.savefig(f"{OUTDIR}/fig5b_top_arg_genera.pdf")
-plt.savefig(f"{OUTDIR}/fig5b_top_arg_genera.png")
-plt.close()
-print("Fig 5B done")
-
-
-# ═══════════════════════════════════════════════════════
-# Fig 5C: Lactococcus ARGs vs MLS ARGs by genus
-# ═══════════════════════════════════════════════════════
+# ── Fig 5D: Lactococcus MAG ARGs (left) and MLS-class ARGs by genus (right) ──
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 5), gridspec_kw={'width_ratios': [1, 1.2]})
-
-# Left: Lactococcus ARG types
-lacto_args = lacto.groupby('best_hit_ARG')['best_hit_ARG'].count().sort_values(ascending=False)
-lacto_classes = lacto.groupby('drug_class')['drug_class'].count().sort_values(ascending=True)
-
-colors_lacto = {'glycopeptide antibiotic': '#2ecc71', 'rifamycin antibiotic': '#9b59b6', 'aminoglycoside antibiotic': '#e67e22'}
-bar_colors = [colors_lacto.get(c, '#95a5a6') for c in lacto_classes.index]
-
 # lmrD (lincosamide efflux, CARD reference = L. lactis) is missed by RGI Strict under the
-# DIAMOND aligner (bitscore 1248 < cutoff 1320); found by a direct DIAMOND search
-# (mag_analysis/lmrD/, added 2026-11-20). Shown hatched, separately from RGI calls.
+# DIAMOND aligner (bitscore 1248 < cutoff 1320); found by a direct DIAMOND search (mag_analysis/lmrD/).
 lmrd = pd.read_csv(f"{MAG_DIR}/lmrD/table_lmrD_lactococcus_MAGs_prodigal.tsv", sep="\t")
 n_lmrd = int((lmrd['status'] != 'absent').sum())
 n_full = int((lmrd['status'] == 'full-length').sum()); n_part = int((lmrd['status'] == 'partial').sum())
-lacto_classes = pd.concat([pd.Series({'lincosamide (lmrD)*': n_lmrd}), lacto_classes.sort_values()]).sort_values()
-bar_colors = ['#c0392b' if c.startswith('lincosamide') else colors_lacto.get(c, '#95a5a6') for c in lacto_classes.index]
-bars = ax1.barh(lacto_classes.index, lacto_classes.values, color=bar_colors, edgecolor='white')
-for b, c in zip(bars, lacto_classes.index):
-    if c.startswith('lincosamide'):
-        b.set_hatch('///'); b.set_edgecolor('black')
-ax1.set_xlabel("ARG ORF count", fontsize=10)
-ax1.set_title(f"Lactococcus MAG ARGs\n({len(lmrd)} MAGs)", fontsize=11, fontweight='bold')
-ax1.text(0, -0.22, f"*lmrD: direct DIAMOND search; RGI cannot call it with the DIAMOND aligner,\n so absent from RGI calls ({n_full} full-length, {n_part} partial)",
-         transform=ax1.transAxes, fontsize=7, va='top')
-ax1.spines['top'].set_visible(False)
-ax1.spines['right'].set_visible(False)
-for i, v in enumerate(lacto_classes.values):
+GENE = {'glycopeptide antibiotic': 'glycopeptide (vanY)', 'rifamycin antibiotic': 'rifamycin (rpoC variant)',
+        'aminoglycoside antibiotic': 'aminoglycoside (aadS)'}
+lc = lacto.groupby('drug_class').size().rename(index=GENE)
+lc = pd.concat([pd.Series({'lincosamide (lmrD)*': n_lmrd}), lc]).sort_values()
+bars = ax1.barh(lc.index, lc.values, color=[DARK if k.startswith('lincos') else (LIGHT if k.startswith('rifa') else MID) for k in lc.index],
+                edgecolor='white')
+for bb, k in zip(bars, lc.index):
+    if k.startswith('lincos'):
+        bb.set_hatch('///'); bb.set_edgecolor('white')
+for i, v in enumerate(lc.values):
     ax1.text(v + 0.3, i, str(v), va='center', fontsize=9)
+ax1.set_xlabel("ARG ORF count", fontsize=10)
+ax1.set_title(f"Lactococcus MAG ARGs ({len(lmrd)} MAGs)", fontsize=11, fontweight='bold')
+ax1.text(0, -0.2, f"*lmrD: direct DIAMOND search; RGI cannot call it with the DIAMOND aligner\n({n_full} full-length, {n_part} partial)",
+         transform=ax1.transAxes, fontsize=7.5, va='top')
+clean(ax1)
 
-# Right: MLS ARGs by genus
-mls_plot = mls_by_genus.head(10).copy()
-mls_plot = mls_plot.iloc[::-1]
-
-# Color by type: Gram-negative efflux vs Firmicutes mef(H) vs other
-def mls_color(row):
-    names = str(row['ARG_names'])
-    if 'CRP' in names or 'emrE' in names or 'mdtE' in names:
-        return '#e74c3c'  # Gram-negative efflux
-    elif 'mef' in names or 'Mef' in names:
-        return '#f39c12'  # mef(H) efflux
-    elif 'Erm' in names or 'efr' in names:
-        return '#3498db'  # other MLS
-    return '#95a5a6'
-
-bar_colors2 = [mls_color(row) for _, row in mls_plot.iterrows()]
-ax2.barh(mls_plot['genus'], mls_plot['n_MLS_ARGs'], color=bar_colors2, edgecolor='white')
-ax2.set_xlabel("MLS ARG count", fontsize=10)
-ax2.set_title("MLS ARGs by genus\n(RGI Strict calls; lmrD not included)", fontsize=11, fontweight='bold')
-ax2.spines['top'].set_visible(False)
-ax2.spines['right'].set_visible(False)
-
-# Legend
-from matplotlib.patches import Patch
-legend_elements = [
-    Patch(facecolor='#e74c3c', label='Gram-negative efflux'),
-    Patch(facecolor='#f39c12', label='mef(H) efflux'),
-    Patch(facecolor='#3498db', label='Other MLS'),
-]
-ax2.legend(handles=legend_elements, loc='lower right', fontsize=8, framealpha=0.9)
-
+# MLS-class = CARD drug class containing a macrolide, lincosamide, streptogramin or pleuromutilin term;
+# binned ORFs only. Multidrug efflux genes (>=3 class families; same rule as Fig. 4B) shown separately.
+mls = full[full['bin'].notna() & full['genus'].notna() &
+           full['drug_class'].str.contains('macrolide|lincosamide|streptogramin|pleuromutilin', na=False)]
+mg = mls.groupby('genus').agg(n=('orf_id', 'size'), md=('multidrug', 'sum'))
+mg['spec'] = mg['n'] - mg['md']
+mg = mg[(mg['spec'] > 0) | (mg['n'] >= 3)].sort_values(['n', 'spec'], ascending=False).iloc[::-1]   # every genus with an MLS-specific gene
+ax2.barh(mg.index, mg['spec'], color=DARK, edgecolor='white', label='MLS-specific (mef, Mef(En2), ErmF, emrE)')
+ax2.barh(mg.index, mg['md'], left=mg['spec'], color=LIGHT, edgecolor='white',
+         label='Multidrug efflux / regulators (>=3 classes)')
+for t in ax2.get_yticklabels():
+    t.set_fontstyle('italic')
+ax2.set_xlabel("MLS-class ARG ORFs in MAGs", fontsize=10)
+ax2.set_title("MLS-class ARGs by genus (RGI; lmrD not included)", fontsize=11, fontweight='bold')
+ax2.legend(loc='lower right', fontsize=8, frameon=False)
+clean(ax2)
 plt.tight_layout()
-plt.savefig(f"{OUTDIR}/fig5c_lactococcus_vs_mls.pdf")
-plt.savefig(f"{OUTDIR}/fig5c_lactococcus_vs_mls.png")
-plt.close()
-print("Fig 5C done")
-
-
-# ═══════════════════════════════════════════════════════
-# Fig 5D: Genomic context (chromosome/plasmid/phage)
-# ═══════════════════════════════════════════════════════
-context_counts = full["genomic_location"].value_counts()
-context_labels = []
-context_vals = []
-context_colors = []
-color_map = {'chromosome': '#3498db', 'plasmid': '#e74c3c', 'phage': '#2ecc71'}
-
-for loc in ['chromosome', 'plasmid', 'phage']:
-    if loc in context_counts.index:
-        context_labels.append(f"{loc.capitalize()}\n({context_counts[loc]:,}; {context_counts[loc]/len(full)*100:.1f}%)")
-        context_vals.append(context_counts[loc])
-        context_colors.append(color_map[loc])
-
-fig, ax = plt.subplots(figsize=(5, 5))
-wedges, _ = ax.pie(
-    context_vals, colors=context_colors,
-    startangle=90, wedgeprops=dict(linewidth=0.5, edgecolor='white')
-)
-ax.legend(wedges, [l.replace("\n", " ") for l in context_labels],
-          loc='upper center', bbox_to_anchor=(0.5, 0.02), ncol=1, fontsize=10, frameon=False)
-ax.set_title("Genomic context of assembly-based ARGs\n(n = 17,371)", fontsize=11, fontweight='bold')
-plt.savefig(f"{OUTDIR}/fig5d_genomic_context.pdf")
-plt.savefig(f"{OUTDIR}/fig5d_genomic_context.png")
-plt.close()
-print("Fig 5D done")
+plt.savefig(f"{OUTDIR}/fig5d_lactococcus_vs_mls.pdf"); plt.savefig(f"{OUTDIR}/fig5d_lactococcus_vs_mls.png")
+plt.close(); print("Fig 5D done"); print(mg)
 
 
 # ═══════════════════════════════════════════════════════
@@ -229,7 +161,7 @@ print("Fig 5D done")
 # ═══════════════════════════════════════════════════════
 from matplotlib.patches import Patch
 tp_order = ['T0h', 'T72h', 'SD14']
-DIET_COL = {'ND': '#4477AA', 'HFD': '#CC6677'}
+ABX_COL = {'None': '#555555', 'AMX': '#E69F00', 'CIP': '#0072B2', 'ERY': '#009E73'}
 PAIRS = [('CTL', 'HFD', 'None'), ('AMX_CTL', 'AMX_HFD', 'AMX'),
          ('CIP_CTL', 'CIP_HFD', 'CIP'), ('ERY_CTL', 'ERY_HFD', 'ERY')]
 fig, ax = plt.subplots(figsize=(11, 4.8))
@@ -241,21 +173,27 @@ for tp in tp_order:
         for off, g, diet in ((-0.2, nd_g, 'ND'), (0.2, hfd_g, 'HFD')):
             vals = per_sample[(per_sample['timepoint'] == tp) & (per_sample['group'] == g)]['total_ARGs']
             assert len(vals) == 3, (tp, g, len(vals))
-            ax.bar(pos + off, vals.mean(), width=0.38, color=DIET_COL[diet], edgecolor='black', linewidth=0.5)
+            c = ABX_COL[abx]
+            ax.bar(pos + off, vals.mean(), width=0.38, color=c, alpha=(0.9 if diet == 'HFD' else 0.3),
+                   edgecolor=c, linewidth=1.2)
             ax.errorbar(pos + off, vals.mean(), yerr=vals.std(), fmt='none', color='black', capsize=2.5, linewidth=0.9)
-            ax.scatter(pos + off + rng.uniform(-0.06, 0.06, len(vals)), vals, color='black', s=10, zorder=5, alpha=0.7)
-        xt.append(pos); xl.append(abx); pos += 1
+            ax.scatter(pos + off + rng.uniform(-0.06, 0.06, len(vals)), vals, s=16, zorder=5,
+                       marker=('^' if diet == 'HFD' else 'o'), facecolor=(c if diet == 'HFD' else 'white'),
+                       edgecolor='black', linewidth=0.6)
+        xt.append(pos); xl.append('CTL' if abx == 'None' else abx); pos += 1
     tp_mid.append((start + pos - 1) / 2); pos += 0.7
 ax.set_xticks(xt); ax.set_xticklabels(xl, fontsize=9)
 for m, tp in zip(tp_mid, tp_order):
     ax.text(m, -0.12, tp, transform=ax.get_xaxis_transform(), ha='center', va='top', fontsize=11, fontweight='bold')
 ax.set_ylabel("ARG-carrying ORFs per sample\n(assembly-based)", fontsize=10)
 ax.set_ylim(0, 560)
-ax.legend(handles=[Patch(facecolor=DIET_COL['ND'], edgecolor='black', label='Normal diet (ND)'),
-                   Patch(facecolor=DIET_COL['HFD'], edgecolor='black', label='High-fat diet (HFD)')],
-          fontsize=9, loc='upper left', frameon=False, ncol=2)
+from matplotlib.lines import Line2D
+ax.legend(handles=[Patch(facecolor=c, edgecolor=c, label=('No antibiotic' if a == 'None' else a)) for a, c in ABX_COL.items()]
+          + [Patch(facecolor='#bbbbbb', alpha=0.4, edgecolor='#555555', label='ND (light fill, open circles)'),
+             Patch(facecolor='#555555', edgecolor='#555555', label='HFD (solid fill, triangles)')],
+          fontsize=8.5, loc='upper left', frameon=False, ncol=6, bbox_to_anchor=(0, 1.02), columnspacing=1.0)
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
-ax.set_title("Assembly-based ARG-carrying ORFs by diet, antibiotic and timepoint", fontsize=12, fontweight='bold')
+ax.set_title("Assembly-based ARG-carrying ORFs per sample", fontsize=12, fontweight='bold', pad=14)
 plt.tight_layout()
 plt.savefig(f"{OUTDIR}/fig5e_assembly_args_by_diet.pdf")
 plt.savefig(f"{OUTDIR}/fig5e_assembly_args_by_diet.png")
