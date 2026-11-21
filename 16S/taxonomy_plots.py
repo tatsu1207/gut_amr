@@ -173,13 +173,13 @@ if available_targets:
             abx, diet = traj_name.split("_")
             col, sty = ABX_COL[abx], DIET_STYLE[diet]
             ax.errorbar(stats["day"].astype(float) + sty["dx"], stats["mean"], yerr=stats["sem"],
-                       marker="o", markersize=5, capsize=2.5, linewidth=1.6, linestyle=sty["linestyle"],
+                       marker=("^" if diet == "HFD" else "o"), markersize=5, capsize=2.5, linewidth=1.6, linestyle=sty["linestyle"],
                        color=col, mec=col, mfc=sty["mfc"] or col, mew=1.3, elinewidth=0.9)
 
         for diet, off in (("ND", -0.25), ("HFD", 0.25)):
             v = pre.loc[genus, pre_diet[pre_diet == diet].index]
             c = ABX_COL["Control"]
-            ax.errorbar(XPRE + off, v.mean(), yerr=v.sem(), marker="o", markersize=6, capsize=3,
+            ax.errorbar(XPRE + off, v.mean(), yerr=v.sem(), marker=("^" if diet == "HFD" else "o"), markersize=6, capsize=3,
                         mfc=DIET_STYLE[diet]["mfc"] or c, mec=c, mew=1.4, color=c, linestyle="none")
         ax.axvline(-1.2, color="gray", linestyle=":", linewidth=0.8, alpha=0.7)
         ax.text(-1.2, 1.0, "13-wk diet", transform=ax.get_xaxis_transform(), ha="center", va="bottom",
@@ -190,8 +190,8 @@ if available_targets:
         from matplotlib.lines import Line2D
         h = [Line2D([], [], color=c, lw=2.5, label=a if a != "Control" else "No antibiotic")
              for a, c in ABX_COL.items()]
-        h += [Line2D([], [], color="black", lw=1.6, ls="-", marker="o", mfc="black", label="HFD"),
-              Line2D([], [], color="black", lw=1.6, ls="--", marker="o", mfc="white", label="ND")]
+        h += [Line2D([], [], color="black", lw=1.6, ls="--", marker="o", mfc="white", label="ND"),
+              Line2D([], [], color="black", lw=1.6, ls="-", marker="^", mfc="black", label="HFD")]
         legend_handles = h   # one shared legend below the panels (an in-panel legend hid data points)
         ax.axvspan(0, 3, alpha=0.1, color="red", label="Treatment" if ax_idx == 0 else None)
         ax.set_xticks([XPRE, 0, 1, 3, 6, 13, 17])

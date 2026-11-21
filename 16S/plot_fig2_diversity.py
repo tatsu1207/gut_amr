@@ -34,7 +34,7 @@ def add_prediet(ax, col):
     """Pre-diet ND/HFD means +/- SEM, open markers, with an axis-break mark before T0."""
     for diet, c, off in (("ND", "#555555", -0.12), ("HFD", "#555555", 0.12)):
         v = prediet[prediet["diet"] == diet][col]
-        ax.errorbar(XPRE + off, v.mean(), yerr=v.sem(), marker="o", mfc=("white" if diet == "ND" else c), mec=c, mew=1.4,
+        ax.errorbar(XPRE + off, v.mean(), yerr=v.sem(), marker=("o" if diet == "ND" else "^"), mfc=("white" if diet == "ND" else c), mec=c, mew=1.4,
                     color=c, capsize=3, markersize=6, linestyle="none", label=f"Pre-diet, {diet}")
     ax.axvline(x=-0.7, color="gray", linestyle=":", alpha=0.6, linewidth=0.8)
     ax.text(-0.7, 1.0, "13-wk diet", transform=ax.get_xaxis_transform(), ha="center", va="bottom",
@@ -55,7 +55,7 @@ def gabx(g): return g.split("_")[0] if "_" in g else "None"
 def gdiet(g): return "HFD" if g.endswith("HFD") else "ND"
 def line_style(g):
     d = gdiet(g); c = ABX_COL[gabx(g)]
-    return dict(color=c, mec=c, mfc=(c if d == "HFD" else "white"), marker="o", mew=1.2,
+    return dict(color=c, mec=c, mfc=(c if d == "HFD" else "white"), marker=("^" if d == "HFD" else "o"), mew=1.2,
                 linestyle=("-" if d == "HFD" else "--"), linewidth=1.5, capsize=2.5, markersize=5)
 DX = {"ND": -0.07, "HFD": 0.07}   # nudge ND/HFD apart so error bars do not overlap
 
@@ -151,11 +151,9 @@ ax.spines['right'].set_visible(False)
 plt.tight_layout()
 from matplotlib.lines import Line2D
 _h = [Line2D([], [], color=c, lw=3, label=("No antibiotic" if a == "None" else a)) for a, c in ABX_COL.items()]
-_h += [Line2D([], [], color="black", lw=1.5, ls="-", marker="o", mfc="black", label="HFD"),
-       Line2D([], [], color="black", lw=1.5, ls="--", marker="o", mfc="white", label="ND"),
-       Line2D([], [], color="black", ls="none", marker="o", label="C: ND"),
-       Line2D([], [], color="black", ls="none", marker="^", label="C: HFD")]
-fig.legend(handles=_h, loc="upper center", bbox_to_anchor=(0.5, 0.0), ncol=8, fontsize=9, frameon=False,
+_h += [Line2D([], [], color="black", lw=1.5, ls="--", marker="o", mfc="white", label="ND"),
+       Line2D([], [], color="black", lw=1.5, ls="-", marker="^", mfc="black", label="HFD")]
+fig.legend(handles=_h, loc="upper center", bbox_to_anchor=(0.5, 0.0), ncol=6, fontsize=9, frameon=False,
            handlelength=2.6, columnspacing=1.2)
 plt.savefig(f"{OUTDIR}/fig2_diversity.pdf")
 plt.savefig(f"{OUTDIR}/fig2_diversity.png")
