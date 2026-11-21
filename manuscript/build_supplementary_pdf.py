@@ -35,7 +35,7 @@ S = []
 S.append(Paragraph("Supplementary Information", H1))
 S.append(Paragraph(
     "Intrinsic, chromosomally encoded resistance dominates the gut resistome, and high-fat "
-    "diet impairs recovery of butyrate-synthesis capacity after antibiotics in mice", BODY))
+    "diet is associated with failed recovery of butyrate-synthesis capacity after amoxicillin in mice", BODY))
 S.append(Paragraph("Jungman Kim, Tatsuya Unno", BODY))
 S.append(Spacer(1, 16))
 
