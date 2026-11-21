@@ -183,32 +183,28 @@ print(f"Saved: {OUT / 'fig4b_arg_class_composition.png'}")
 plt.close()
 
 # ============================================================
-# Fig 4C: Fold change from baseline heatmap (by group)
+# Fig 4C: Fold change from baseline (2026-11-21). Same categories as Fig. 4B (class_categories.py;
+# multidrug genes no longer counted in full under every class they list); each mouse compared with
+# its own T0 (the same three mice were sampled at T0, T3 and R14), then the median of the three, so a
+# single animal cannot set a group's value; one pseudocount (0.001 copies/16S) for every cell, so
+# near-absent classes do not produce large spurious ratios.
 # ============================================================
-# Calculate fold change T72h/T0h and SD14/T0h for key classes
-key_classes = ['tetracycline antibiotic', 'macrolide antibiotic',
-               'penicillin beta-lactam', 'fluoroquinolone antibiotic',
-               'lincosamide antibiotic', 'phenicol antibiotic',
-               'aminoglycoside antibiotic', 'cephalosporin']
-key_classes = [c for c in key_classes if c in simple.columns]
-
+PSEUDO = 1e-3
+FC_CATS = [c for c in ["tetracycline", "lincosamide", "macrolide", "streptogramin", "glycopeptide",
+                       "fluoroquinolone", "beta-lactam", "aminoglycoside", MULTI]]   # phenicol: no class-specific genes once multidrug is separate
+mouse = pd.Series({sid: sid.rsplit('_', 1)[0].replace('CSL', 'CTL') for sid in df.index})   # CSL = untreated CTL mice, relabelled at recovery
 fc_rows = []
 for grp in grp_order:
-    t0 = df[(df['group'] == grp) & (df['timepoint'] == 'T0h')]
     for tp in ['T72h', 'SD14']:
-        tx = df[(df['group'] == grp) & (df['timepoint'] == tp)]
-        if t0.empty or tx.empty:
-            continue
-        for cls in key_classes:
-            baseline = t0[cls].mean()
-            treated = tx[cls].mean()
-            if baseline > 0.0001:
-                fc = np.log2(treated / baseline)
-            else:
-                fc = np.log2((treated + 0.001) / (baseline + 0.001))
-            fc_rows.append({'group': grp, 'timepoint': tp,
-                           'drug_class': cls.replace(' antibiotic', ''), 'log2FC': fc})
-
+        ids = [i for i in df.index[(df['group'] == grp) & (df['timepoint'] == tp)]]
+        for c in FC_CATS:
+            v = []
+            for i in ids:
+                b0 = [j for j in df.index[(df['timepoint'] == 'T0h')] if mouse[j] == mouse[i]]
+                if b0:
+                    v.append(np.log2((cat.loc[i, c] + PSEUDO) / (cat.loc[b0[0], c] + PSEUDO)))
+            if v:
+                fc_rows.append({'group': grp, 'timepoint': tp, 'drug_class': c, 'log2FC': float(np.median(v))})
 fc_df = pd.DataFrame(fc_rows)
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -216,10 +212,10 @@ fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 for ax_idx, tp in enumerate(['T72h', 'SD14']):
     ax = axes[ax_idx]
     pivot = fc_df[fc_df['timepoint'] == tp].pivot(index='drug_class', columns='group', values='log2FC')
-    pivot = pivot[[g for g in grp_order if g in pivot.columns]]
+    pivot = pivot[[g for g in grp_order if g in pivot.columns]].reindex(FC_CATS)
 
     sns.heatmap(pivot, cmap='RdBu_r', center=0, annot=True, fmt='.1f',
-                ax=ax, cbar_kws={'label': 'log2(fold change vs T0h)'},
+                ax=ax, cbar_kws={'label': 'log2 fold change vs own T0\n(median of 3 mice)'},
                 linewidths=0.5, vmin=-4, vmax=4)
     ax.set_title(f"Fold Change at {tp} vs Baseline", fontsize=11, fontweight='bold')
     ax.set_ylabel("Drug Class" if ax_idx == 0 else "")

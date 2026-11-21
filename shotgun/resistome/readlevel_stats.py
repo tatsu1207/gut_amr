@@ -141,6 +141,19 @@ P("Fig4B category shares: " + ", ".join(f"{c} {v:.1f}%" for c, v in cshare.sort_
 clead = cat.groupby([meta.group, meta.tp]).mean().idxmax(axis=1)
 P(f"Fig4B leading category counts over 24 group-timepoints: {clead.value_counts().to_dict()}")
 P(f"  non-tetracycline-led cells: {[(k, v) for k, v in clead.items() if v != 'tetracycline']}")
+# Fig. 4C numbers: per-mouse log2 fold change vs own T0 (pseudocount 0.001), median of three mice
+_mouse = pd.Series({x: x.rsplit("_", 1)[0].replace("CSL", "CTL") for x in S})
+def fc_med(grp, tp, c):
+    v = []
+    for x in S:
+        if meta.group[x] == grp and meta.tp[x] == tp:
+            b = [y for y in S if meta.tp[y] == "T0h" and _mouse[y] == _mouse[x]]
+            if b:
+                v.append(np.log2((cat.loc[x, c] + 1e-3) / (cat.loc[b[0], c] + 1e-3)))
+    return float(np.median(v)) if v else float("nan")
+for tp in ("T72h", "SD14"):
+    for c in ["multidrug (>=3 classes)", "glycopeptide", "fluoroquinolone", "beta-lactam", "aminoglycoside", "lincosamide", "tetracycline"]:
+        P(f"Fig4C {tp} {c}: AMX_CTL {fc_med('AMX_CTL', tp, c):.1f} AMX_HFD {fc_med('AMX_HFD', tp, c):.1f}")
 # AMX classes rising T0h->SD14 (Fig 4C classes)
 simple = pd.read_csv(f"{H}arg_abundance_simple_class_{LEVEL}.tsv", sep="\t", index_col=0)
 rise = {}
