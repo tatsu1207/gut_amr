@@ -49,7 +49,7 @@ GROUP_MARKERS = {
 # ═══════════════════════════════════════════════════════
 # Fig 2: 4-panel figure
 # ═══════════════════════════════════════════════════════
-fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+fig, axes = plt.subplots(2, 2, figsize=(11, 12.5))  # portrait
 
 # ── Panel A: Shannon diversity over time ──
 ax = axes[0, 0]

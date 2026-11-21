@@ -117,10 +117,10 @@ for s in ['Acetate', 'Propionate', 'Butyrate']:
 # ══════════════════════════════════════════════════
 # Plot Fig 1: 6 panels (2x3)
 # ══════════════════════════════════════════════════
-fig, axes = plt.subplots(2, 3, figsize=(14, 9))
+fig, axes = plt.subplots(3, 2, figsize=(10, 12.5))  # portrait: A B / C D / E F
 
 # ── Panel A: Body weight gain ──
-ax = axes[0, 0]
+ax = axes.flat[0]
 markers = {'CTL': 'o', 'HFD': 'o', 'CIP_CTL': 'v', 'CIP_HFD': 'v',
            'AMX_CTL': 's', 'AMX_HFD': 's', 'ERY_CTL': 'D', 'ERY_HFD': 'D'}
 fillstyle = {g: 'full' if g in ND_GROUPS else 'none' for g in GROUPS}
@@ -144,7 +144,7 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 # ── Panel B: LDL cholesterol ──
-ax = axes[0, 1]
+ax = axes.flat[1]
 x = np.arange(len(GROUPS))
 bar_colors = [colors[g] for g in GROUPS]
 bars = ax.bar(x, [ldl_mean[g] for g in GROUPS], yerr=[ldl_sem[g] for g in GROUPS],
@@ -163,7 +163,7 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 # ── Panel C: HDL cholesterol ──
-ax = axes[0, 2]
+ax = axes.flat[2]
 bars = ax.bar(x, [hdl_mean[g] for g in GROUPS], yerr=[hdl_sem[g] for g in GROUPS],
               color=bar_colors, edgecolor='white', capsize=3, alpha=0.8)
 ax.set_xticks(x)
@@ -181,7 +181,7 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 # ── Panel D: Acetate ──
-ax = axes[1, 0]
+ax = axes.flat[3]
 bp = ax.boxplot([scfa_data['Acetate'][g] for g in GROUPS],
                 positions=x, widths=0.6, patch_artist=True,
                 medianprops=dict(color='black', linewidth=1.5))
@@ -196,7 +196,7 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 # ── Panel E: Propionate ──
-ax = axes[1, 1]
+ax = axes.flat[4]
 bp = ax.boxplot([scfa_data['Propionate'][g] for g in GROUPS],
                 positions=x, widths=0.6, patch_artist=True,
                 medianprops=dict(color='black', linewidth=1.5))
@@ -211,7 +211,7 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
 # ── Panel F: Butyrate ──
-ax = axes[1, 2]
+ax = axes.flat[5]
 bp = ax.boxplot([scfa_data['Butyrate'][g] for g in GROUPS],
                 positions=x, widths=0.6, patch_artist=True,
                 medianprops=dict(color='black', linewidth=1.5))

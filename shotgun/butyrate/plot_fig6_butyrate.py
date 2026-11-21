@@ -30,15 +30,15 @@ gen = pd.read_csv(f"{T}/but_buk_carrier_genera.tsv", sep="\t")
 TP = ["T0h", "T72h", "SD14"]
 ABX = [("None", "No antibiotic"), ("AMX", "Amoxicillin"), ("CIP", "Ciprofloxacin"), ("ERY", "Erythromycin")]
 
-fig = plt.figure(figsize=(7.2, 5.6))
-outer = fig.add_gridspec(2, 1, height_ratios=[1, 1.05], hspace=0.45)
-gs_top = outer[0].subgridspec(1, 4, wspace=0.35)
+fig = plt.figure(figsize=(7.2, 9.4))  # portrait: A as 2x2 small multiples above B | C
+outer = fig.add_gridspec(2, 1, height_ratios=[1.75, 1], hspace=0.2)
+gs_top = outer[0].subgridspec(2, 2, wspace=0.12, hspace=0.35)
 gs_bot = outer[1].subgridspec(1, 2, wspace=0.55)
 
 # ---- A: but over time, small multiples by antibiotic ----
 ymax = ab["but"].max() * 1.1
 for i, (abx, title) in enumerate(ABX):
-    ax = fig.add_subplot(gs_top[0, i])
+    ax = fig.add_subplot(gs_top[i // 2, i % 2])
     for diet, col in [("ND", ND), ("HFD", HFD)]:
         d = ab[(ab.antibiotic == abx) & (ab.diet == diet)]
         m = d.groupby("timepoint")["but"].mean().reindex(TP)
@@ -55,11 +55,11 @@ for i, (abx, title) in enumerate(ABX):
     ax.set_xlim(-0.3, 2.45); ax.set_ylim(0, ymax)
     ax.set_title(title, fontsize=8, color=INK, pad=4)
     ax.yaxis.grid(True, color=GRID, lw=0.5); ax.set_axisbelow(True)
-    if i == 0:
+    if i % 2 == 0:
         ax.set_ylabel("but gene copies per genome", fontsize=8)
     else:
         ax.set_yticklabels([])
-fig.text(0.07, 0.94, "A", fontsize=11, fontweight="bold")
+fig.text(0.04, fig.axes[0].get_position().y1 + 0.03, "A", fontsize=11, fontweight="bold")
 
 # ---- B: SD14 gene abundance vs measured cecal butyrate (group means) ----
 ax = fig.add_subplot(gs_bot[0, 0])
@@ -79,7 +79,7 @@ ax.set_xlim(-0.01, link["but"].max() * 1.25); ax.set_ylim(-3, link["butyrate"].m
 ax.grid(True, color=GRID, lw=0.5); ax.set_axisbelow(True)
 h = [plt.Line2D([], [], marker="o", ls="", color=c, label=l, markersize=6) for l, c in [("ND", ND), ("HFD", HFD)]]
 ax.legend(handles=h, frameon=False, fontsize=7, loc="lower left", bbox_to_anchor=(0.5, 0.02))
-fig.text(0.07, 0.47, "B", fontsize=11, fontweight="bold")
+fig.text(0.04, ax.get_position().y1 + 0.015, "B", fontsize=11, fontweight="bold")
 
 # ---- C: genera carrying but (share of total but abundance) ----
 ax = fig.add_subplot(gs_bot[0, 1])
@@ -101,7 +101,7 @@ ax.set_xlim(0, max(vals) * 100 * 1.2)
 ax.xaxis.grid(True, color=GRID, lw=0.5); ax.set_axisbelow(True)
 for t in ax.get_yticklabels()[:len(top)]:
     t.set_fontstyle("italic")
-fig.text(0.55, 0.47, "C", fontsize=11, fontweight="bold")
+fig.text(0.44, ax.get_position().y1 + 0.015, "C", fontsize=11, fontweight="bold")
 
 for ext in ("pdf", "png"):
     fig.savefig(f"{FIG}/fig6_butyrate_capacity.{ext}", dpi=300, bbox_inches="tight")

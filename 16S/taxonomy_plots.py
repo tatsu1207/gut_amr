@@ -115,7 +115,7 @@ target_genera = ["Lactococcus", "Akkermansia"]
 available_targets = [g for g in target_genera if g in rel_abund.index]
 
 if available_targets:
-    fig, axes = plt.subplots(1, len(available_targets), figsize=(7 * len(available_targets), 5))
+    fig, axes = plt.subplots(1, len(available_targets), figsize=(7 * len(available_targets), 5.8))
     if len(available_targets) == 1:
         axes = [axes]
 
@@ -178,7 +178,7 @@ if available_targets:
 mean_by_group = rel_plot.groupby("group")[top_genera].mean()
 mean_by_group = mean_by_group.reindex([g for g in groups_to_plot if g in mean_by_group.index])
 
-fig, ax = plt.subplots(figsize=(12, 6))
+fig, ax = plt.subplots(figsize=(12, 7.5))
 sns.heatmap(mean_by_group.T, cmap="YlOrRd", annot=True, fmt=".1f",
             ax=ax, cbar_kws={"label": "Mean relative abundance (%)"})
 ax.set_title("Mean genus relative abundance by group (all timepoints pooled)", fontsize=12)

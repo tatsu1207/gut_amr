@@ -20,7 +20,8 @@ GAP = 40              # px between panels and rows
 FIGS = {
     MF + "fig3_combined.png": [
         # former panel A (stacked bars by group x timepoint) is now Supplementary Fig. S3
-        [("A", MF + "genus_trajectories.png"), ("B", MF + "genus_heatmap.png")],
+        [("A", MF + "genus_trajectories.png")],
+        [("B", MF + "genus_heatmap.png")],  # stacked: portrait
     ],
     HF + "fig4_combined.png": [
         [("A", HF + "fig4a_total_arg.png")],
