@@ -29,6 +29,8 @@ arg_samples = arg_samples.intersection(asv.columns)
 # same read threshold as every other 16S analysis (>= 5,000 reads; added 2026-11-21 -- the 33 low-read
 # libraries, five of them empty, had been included in Fig. 3 and Supplementary Fig. 3)
 arg_samples = arg_samples[asv[arg_samples].sum() >= 5000]
+# T6h (untreated groups only, own MiSeq run) and R7 (failed MiSeq run) left out (2026-11-21), as in Figs. 2 and 3
+arg_samples = arg_samples[~meta.loc[arg_samples, "timepoint"].isin(["T6h", "SD7"])]
 meta_arg = meta.loc[arg_samples]
 asv_arg = asv[arg_samples]
 
@@ -51,7 +53,7 @@ rel_plot = rel_plot.clip(lower=0)
 rel_plot = rel_plot.join(meta_arg[["group", "timepoint", "day", "diet", "antibiotic", "phase"]])
 
 # Define timepoint order
-tp_order = ["T0h", "T6h", "T24h", "T72h", "S72h", "SD7", "SD10", "SD14"]
+tp_order = ["T0h", "T24h", "T72h", "S72h", "SD10", "SD14"]
 rel_plot["timepoint"] = pd.Categorical(rel_plot["timepoint"], categories=tp_order, ordered=True)
 
 # Color palette for genera
