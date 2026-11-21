@@ -217,11 +217,21 @@ for ax_idx, tp in enumerate(['T72h', 'SD14']):
     sns.heatmap(pivot, cmap='RdBu_r', center=0, annot=True, fmt='.1f',
                 ax=ax, cbar_kws={'label': 'log2 fold change vs own T0\n(median of 3 mice)'},
                 linewidths=0.5, vmin=-4, vmax=4)
-    ax.set_title(f"Fold Change at {tp} vs Baseline", fontsize=11, fontweight='bold')
-    ax.set_ylabel("Drug Class" if ax_idx == 0 else "")
+    # Outline each antibiotic's own target class(es): AMX -> beta-lactam, CIP -> fluoroquinolone,
+    # ERY -> macrolide, lincosamide, streptogramin (MLS).
+    from matplotlib.patches import Rectangle
+    OWN = {"AMX": ["beta-lactam"], "CIP": ["fluoroquinolone"], "ERY": ["lincosamide", "macrolide", "streptogramin"]}
+    for ci, g in enumerate(pivot.columns):
+        for cls in OWN.get(g.split("_")[0], []):
+            ri = list(pivot.index).index(cls)
+            ax.add_patch(Rectangle((ci + 0.04, ri + 0.04), 0.92, 0.92, fill=False, edgecolor="black", lw=2.2, zorder=5))
+    ax.set_title(f"Fold change at {tp} vs baseline", fontsize=11, fontweight='bold')
+    ax.set_ylabel("Drug class" if ax_idx == 0 else "")
     ax.set_xlabel("")
 
 plt.tight_layout()
+fig.text(0.5, -0.04, "Black outline: the drug class targeted by that group's antibiotic (AMX, beta-lactam; CIP, fluoroquinolone; ERY, MLS)",
+         ha="center", fontsize=10)
 fig.savefig(OUT / "fig4c_arg_foldchange_heatmap.png", dpi=300, bbox_inches='tight')
 fig.savefig(OUT / "fig4c_arg_foldchange_heatmap.pdf", bbox_inches='tight')
 print(f"Saved: {OUT / 'fig4c_arg_foldchange_heatmap.png'}")
