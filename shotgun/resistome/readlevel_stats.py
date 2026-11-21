@@ -132,6 +132,15 @@ gmeans = frac.groupby([meta.group, meta.tp]).mean()
 lead = gmeans.idxmax(axis=1)
 P(f"leading class counts over 24 group-timepoints: {lead.value_counts().to_dict()}")
 P(f"  lincosamide-led cells: {list(lead[lead == 'lincosamide antibiotic'].index)}")
+# --- Fig. 4B categories (class_categories.py: genes spanning >=3 class families = "multidrug") ---
+sys.path.insert(0, "/home/unnot/vault/kjm/hiseq")
+from class_categories import categorise
+cat = categorise(pg, S)
+cshare = cat.sum() / cat.sum().sum() * 100
+P("Fig4B category shares: " + ", ".join(f"{c} {v:.1f}%" for c, v in cshare.sort_values(ascending=False).head(7).items()))
+clead = cat.groupby([meta.group, meta.tp]).mean().idxmax(axis=1)
+P(f"Fig4B leading category counts over 24 group-timepoints: {clead.value_counts().to_dict()}")
+P(f"  non-tetracycline-led cells: {[(k, v) for k, v in clead.items() if v != 'tetracycline']}")
 # AMX classes rising T0h->SD14 (Fig 4C classes)
 simple = pd.read_csv(f"{H}arg_abundance_simple_class_{LEVEL}.tsv", sep="\t", index_col=0)
 rise = {}

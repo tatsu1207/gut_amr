@@ -24,7 +24,7 @@ Raw reads: NCBI SRA, BioProject **PRJNA1501316**.
 | | `run_arg_quantify.sh`, `calculate_arg_abundance.py` | 16S (SILVA) read counts and ARG copies per 16S rRNA gene copy |
 | `shotgun/resistome/` | `reanalyze_arg_model_types.py` | per-gene abundance under three CARD model filters (all / rRNA variants excluded / protein homolog models only) |
 | | `readlevel_stats.py` | **every read-level statistic quoted in the manuscript**, incl. the three-way ANOVA (Supplementary Data 4); main analysis = `homolog_only` |
-| | `resistome_figures.py` | Fig. 4A-E |
+| | `resistome_figures.py`, `class_categories.py` | Fig. 4 panels; drug-class categories for Fig. 4B (genes spanning >= 3 class families = multidrug) |
 | `shotgun/assembly_binning/` | `run_assembly*.sh` | MEGAHIT, Prodigal, RGI (CARD, Strict + Perfect), geNomad, MOB-typer |
 | | `run_binning*.sh`, `run_gtdbtk.sh`, `run_mag_analysis.sh`, `run_analysis.sh` | MetaBAT2, MaxBin2, DAS Tool, CheckM2, GTDB-Tk, ARG-MAG linkage |
 | | `run_arg_reanalysis.sh` | AMRFinderPlus cross-check (also an ARGs-OAP run not used in the paper) |

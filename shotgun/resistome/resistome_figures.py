@@ -131,51 +131,51 @@ print(f"Saved: {OUT / 'fig4a_total_arg.png'}")
 plt.close()
 
 # ============================================================
-# Fig 4B: ARG class composition stacked bars
+# Fig 4B: ARG composition, one bar per mouse (2026-11-21). Group means had hidden that one AMX_CTL
+# animal at T3 made up 85% of its group's bar, and splitting multidrug efflux genes across their
+# classes made them look like class-specific resistance; see class_categories.py.
 # ============================================================
-# Top drug classes by mean abundance
-top_classes = ['tetracycline antibiotic', 'macrolide antibiotic',
-               'lincosamide antibiotic', 'streptogramin antibiotic',
-               'pleuromutilin antibiotic', 'phenicol antibiotic',
-               'glycopeptide antibiotic', 'oxazolidinone antibiotic',
-               'penicillin beta-lactam', 'fluoroquinolone antibiotic',
-               'cephalosporin', 'aminoglycoside antibiotic']
+import sys as _s; _s.path.insert(0, "/home/unnot/vault/kjm/hiseq")
+from class_categories import categorise, ORDER as CAT_ORDER, MULTI
+cat = categorise(pergene, list(df.index))
+assert np.allclose(cat.sum(axis=1), df['total_ARG'])
+CAT_COL = {"tetracycline": "#88CCEE", "lincosamide": "#AA4499", "macrolide": "#CC6677",
+           "streptogramin": "#882255", "pleuromutilin": "#DDCC77", "glycopeptide": "#117733",
+           "fluoroquinolone": "#332288", "beta-lactam": "#E69F00", "aminoglycoside": "#44AA99",
+           "phenicol": "#999933", "peptide": "#DDDDDD", "other": "#AAAAAA", MULTI: "#444444"}
+cats = [c for c in CAT_ORDER if cat[c].max() > 0]
 
-# Verify which exist
-top_classes = [c for c in top_classes if c in frac.columns]
-
-fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey=True)
-class_colors = sns.color_palette("Set3", len(top_classes)) + [(.4,.4,.4)]
-
+fig, axes = plt.subplots(1, 3, figsize=(16, 5.2), sharey=True)
 for ax_idx, tp in enumerate(tp_order):
     ax = axes[ax_idx]
-    tp_data = df[df['timepoint'] == tp].copy()
-    tp_data = tp_data.sort_values('group')
-
-    groups_present = [g for g in grp_order if g in tp_data['group'].values]
-    means = frac.loc[tp_data.index].groupby(tp_data['group'], observed=True)[top_classes].mean()
-    means = means.loc[groups_present]
-    means['Other'] = tp_data.groupby('group', observed=True)['total_ARG'].mean().loc[groups_present] - means.sum(axis=1)
-    means['Other'] = means['Other'].clip(lower=0)
-
-    bottom = np.zeros(len(means))
-    for i, cls in enumerate(top_classes + ['Other']):
-        vals = means[cls].values
-        ax.bar(range(len(means)), vals, bottom=bottom,
-               color=class_colors[i], edgecolor='white', linewidth=0.3,
-               label=cls.replace(' antibiotic', '') if ax_idx == 0 else None,
-               width=0.75)
-        bottom += vals
-
-    ax.set_xticks(range(len(means)))
-    ax.set_xticklabels(means.index, rotation=45, ha='right', fontsize=8)
+    pos, xt, xl, x = 0.0, [], [], []
+    order = []
+    for g in grp_order:
+        ids = sorted(df.index[(df['timepoint'] == tp) & (df['group'] == g)])
+        xs = [pos + i for i in range(len(ids))]
+        order += ids; x += xs
+        if ids:
+            xt.append(np.mean(xs)); xl.append(g)
+        pos += len(ids) + 0.8
+    bottom = np.zeros(len(order))
+    for c in cats:
+        v = cat.loc[order, c].values
+        ax.bar(x, v, bottom=bottom, width=0.85, color=CAT_COL[c], edgecolor='white', linewidth=0.3,
+               label=c if ax_idx == 0 else None)
+        bottom += v
+    YMAX = 0.6   # one T3 bar (AMX_CTL mouse 7, 1.58) is truncated and labelled with its value
+    for xi, tot in zip(x, bottom):
+        if tot > YMAX:
+            ax.text(xi, YMAX * 1.005, f"\u2191 {tot:.2f}", ha='center', va='bottom', fontsize=9,
+                    color='black', clip_on=False)
+    ax.set_ylim(0, YMAX)
+    ax.set_xticks(xt); ax.set_xticklabels(xl, rotation=45, ha='right', fontsize=8)
     ax.set_title(tp, fontsize=12, fontweight='bold')
+    ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
     if ax_idx == 0:
-        ax.set_ylabel("ARG abundance\n(copies / 16S copy;\nmulti-class genes split equally)", fontsize=10)
-
-fig.legend(loc='center left', bbox_to_anchor=(1.0, 0.5), fontsize=12,
-           title='Drug class', title_fontsize=13)
-fig.suptitle("ARG Composition by Drug Class", fontsize=13, y=1.02)
+        ax.set_ylabel("ARG abundance\n(copies / 16S rRNA gene copy)", fontsize=10)
+fig.legend(loc='center left', bbox_to_anchor=(1.0, 0.5), fontsize=12, title='Drug class', title_fontsize=13)
+fig.suptitle("ARG composition by drug class (one bar per mouse)", fontsize=13, y=1.02)
 plt.tight_layout()
 fig.savefig(OUT / "fig4b_arg_class_composition.png", dpi=300, bbox_inches='tight')
 fig.savefig(OUT / "fig4b_arg_class_composition.pdf", bbox_inches='tight')
