@@ -173,8 +173,8 @@ for ax_idx, tp in enumerate(tp_order):
     if ax_idx == 0:
         ax.set_ylabel("ARG abundance\n(copies / 16S copy;\nmulti-class genes split equally)", fontsize=10)
 
-fig.legend(loc='center left', bbox_to_anchor=(1.0, 0.5), fontsize=8,
-           title='Drug class', title_fontsize=9)
+fig.legend(loc='center left', bbox_to_anchor=(1.0, 0.5), fontsize=12,
+           title='Drug class', title_fontsize=13)
 fig.suptitle("ARG Composition by Drug Class", fontsize=13, y=1.02)
 plt.tight_layout()
 fig.savefig(OUT / "fig4b_arg_class_composition.png", dpi=300, bbox_inches='tight')
