@@ -13,23 +13,23 @@ Raw reads: NCBI SRA, BioProject **PRJNA1501316**.
 | Folder | Scripts | Produces |
 |---|---|---|
 | `16S/` | `create_metadata.py` | sample metadata from ASV-table sample names |
-| | `run_diversity.R` | alpha/beta diversity, PERMANOVA (Table 1) |
-| | `run_sseries_stats.R`, `run_pairwise_permdisp.R` | repeated-measures models, PERMDISP (Table S12) |
+| | `run_diversity.R` | alpha/beta diversity, PERMANOVA (Supplementary Table 1) |
+| | `run_sseries_stats.R`, `run_pairwise_permdisp.R` | repeated-measures models, PERMDISP (Supplementary Data 2) |
 | | `differential_abundance.R`, `diet_comparisons.R` | ALDEx2 differential abundance |
 | | `taxonomy_plots.py` | Fig. 3 panels (genus % of genus-assigned reads) |
-| | `plot_fig1_physiology.py`, `plot_fig2_diversity.py`, `plot_supplementary_figures.py` | Figs 1, 2, S1, S2 |
+| | `plot_fig1_physiology.py`, `plot_fig2_diversity.py`, `plot_supplementary_figures.py` | Figs 1, 2 and Supplementary Figs 1, 2 |
 | `shotgun/preprocessing_resistome/` | `run_resistome.sh` | fastp QC, host removal (Bowtie2, GRCm39), Bowtie2 mapping to CARD, `samtools idxstats` |
 | | `run_arg_quantify.sh`, `calculate_arg_abundance.py` | 16S (SILVA) read counts and ARG copies per 16S rRNA gene copy |
 | `shotgun/resistome/` | `reanalyze_arg_model_types.py` | per-gene abundance under three CARD model filters (all / rRNA variants excluded / protein homolog models only) |
-| | `readlevel_stats.py` | **every read-level statistic quoted in the manuscript**, incl. the three-way ANOVA (Table S11); main analysis = `homolog_only` |
+| | `readlevel_stats.py` | **every read-level statistic quoted in the manuscript**, incl. the three-way ANOVA (Supplementary Data 4); main analysis = `homolog_only` |
 | | `resistome_figures.py` | Fig. 4A-E |
 | `shotgun/assembly_binning/` | `run_assembly*.sh` | MEGAHIT, Prodigal, RGI (CARD, Strict + Perfect), geNomad, MOB-typer |
 | | `run_binning*.sh`, `run_gtdbtk.sh`, `run_mag_analysis.sh`, `run_analysis.sh` | MetaBAT2, MaxBin2, DAS Tool, CheckM2, GTDB-Tk, ARG-MAG linkage |
 | | `run_arg_reanalysis.sh` | AMRFinderPlus cross-check (also an ARGs-OAP run not used in the paper) |
 | | `plot_mag_figures.py` | Fig. 5 panels |
-| `shotgun/mobilome/` | `run_mobilome_analysis.sh`, `analyze_mobilome.py`, `*_plasmid_summaries.sh` | ARG mobility (plasmid/phage/conjugation) and Table S7 |
-| `shotgun/butyrate/` | `run_search.sh`, `analyze_butyrate.py`, `plot_fig6_butyrate.py` | butyrate-pathway genes (KOfam/HMMER, DIAMOND for But), Fig. 6, Table S6 |
-| `shotgun/lmrD/` | `classify_mobility.py` | mobility rule applied to the lmrD homologues (Table S13) |
+| `shotgun/mobilome/` | `run_mobilome_analysis.sh`, `analyze_mobilome.py`, `*_plasmid_summaries.sh` | ARG mobility (plasmid/phage/conjugation) and Supplementary Data 11 |
+| `shotgun/butyrate/` | `run_search.sh`, `analyze_butyrate.py`, `plot_fig6_butyrate.py` | butyrate-pathway genes (KOfam/HMMER, DIAMOND for But), Fig. 6, Supplementary Data 12 |
+| `shotgun/lmrD/` | `classify_mobility.py` | mobility rule applied to the lmrD homologues (Supplementary Data 8) |
 | `manuscript/` | `compose_multipanel_figures.py`, `build_*`, `generate_manuscript_pdf.py`, `export_panels.py` | figure assembly, one PNG per panel, and the submission documents |
 
 ## Notes
@@ -46,7 +46,7 @@ Raw reads: NCBI SRA, BioProject **PRJNA1501316**.
 - Never sum CARD "simple class" columns to obtain totals: a gene annotated to k drug classes appears in
   all k columns. Totals here are sums over genes.
 - Not included: the DADA2 amplicon-processing script (parameters are given in the Methods), and the
-  interactive steps behind Table S14 (DIAMOND self-scores of CARD homolog models and the direct
+  interactive steps behind Supplementary Data 9 (DIAMOND self-scores of CARD homolog models and the direct
   homology search of the 72 assemblies) and the lmrD direct search; their outputs are in the
   supplementary tables. `classify_mobility.py` re-implements the mobility rule described in the Methods.
 

@@ -36,7 +36,7 @@ def _read_legends(path):
         t = ln.strip()
         if t == 'Figure legends':
             on = True; continue
-        if on and t == 'Additional files':
+        if on and t == 'Supplementary information':
             break
         m = re.match(r'(Fig\. \d+)\.', t) if on else None
         if m:
@@ -114,7 +114,7 @@ def build_pdf():
     section_heads = [
         'Abstract', 'Background', 'Results', 'Discussion', 'Conclusions',
         'Methods', 'List of abbreviations', 'Declarations', 'References',
-        'Figure legends', 'Additional files',
+        'Figure legends', 'Supplementary information',
     ]
     subsection_heads = [
         'HFD-induced obesity and metabolic changes',
@@ -207,7 +207,7 @@ def build_pdf():
             # Reference entries
             story.append(Paragraph(line, styles['RefStyle']))
 
-        elif line.startswith('Additional file'):
+        elif line.startswith('Supplementary '):
             story.append(Paragraph(line, styles['RefStyle']))
 
         else:

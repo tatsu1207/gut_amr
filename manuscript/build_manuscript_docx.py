@@ -18,7 +18,7 @@ src, template, out = sys.argv[1:4]
 
 H1 = {"Abstract", "Background", "Results", "Discussion", "Conclusions", "Methods",
       "List of abbreviations", "Declarations", "References", "Figure legends",
-      "Additional files"}
+      "Supplementary information"}
 H2_SECTIONS = {"Results", "Methods", "Declarations"}
 DECL_H2 = {"Ethics approval and consent to participate", "Consent for publication",
            "Competing interests", "Funding", "Authors' contributions",

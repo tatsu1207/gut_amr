@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build the single merged Supplementary Information PDF required by npj Biofilms and Microbiomes.
 
-Large data tables stay in supplementary_tables.xlsx and are cited here as
-Supplementary Data; only figures and small tables are rendered inline.
+Large data tables stay in supplementary_tables.xlsx as Supplementary Data 1-14 (titles and
+legends listed here); figures and Supplementary Table 1 are rendered inline.
 """
 import os
 import sys
@@ -41,18 +41,14 @@ S.append(Spacer(1, 16))
 
 S.append(Paragraph("Contents", H2))
 contents = [
-    ["Supplementary Figure S1", "Rarefaction curves and library size distribution"],
-    ["Supplementary Figure S2", "Cecal short-chain fatty acid concentrations by group"],
-    ["Supplementary Figure S3", "Genus composition of each group at each timepoint"],
-    ["Supplementary Figure S4", "The 25 individual ARGs that changed most"],
+    ["Supplementary Fig. 1", "Cecal short-chain fatty acid concentrations by group"],
+    ["Supplementary Fig. 2", "Rarefaction curves and library size distribution"],
+    ["Supplementary Fig. 3", "Genus composition of each group at each timepoint"],
+    ["Supplementary Fig. 4", "The 25 individual ARGs that changed most"],
     ["Supplementary Table 1", "PERMANOVA results across timepoints"],
-    ["Supplementary Table S4", "ARG counts by bacterial genus (assembly-based)"],
-    ["Supplementary Table S6c", "R14 butyrate-gene abundance vs measured cecal SCFAs"],
-    ["Supplementary Table S6d", "Butyrate gene / SCFA correlation statistics"],
-    ["Supplementary Table S7a", "ARG association with mobile genetic elements by drug class"],
-    ["Supplementary Data", "Tables S1, S2 (CARD protein homolog models; rRNA-variant-excluded and unfiltered versions alongside), "
-                           "S3, S5, S6a, S6b, S6e, S7b, S7c, S8-S14 "
-                           "(provided as a separate Excel workbook; too large to render here)"],
+    ["Supplementary Data 1-14", "Titles and legends; the data are provided as a separate Excel workbook "
+                                "(supplementary_tables.xlsx), one or more sheets per item, sheet names "
+                                "prefixed SD1-SD14"],
 ]
 t = Table([[Paragraph(f"<b>{a}</b>", SMALL), Paragraph(b, SMALL)] for a, b in contents],
           colWidths=[1.6*inch, 4.6*inch])
@@ -72,29 +68,29 @@ def fig(path, w_in, title, legend):
     S.append(PageBreak())
 
 
-fig(f"{FIGM}/figS1_rarefaction.png", 6.3, "Supplementary Figure S1",
-    "<b>Supplementary Fig. S1. Sequencing depth and rarefaction.</b> "
-    "(a) Rarefaction curves for a random subset of 150 of the 451 retained samples, showing expected "
-    "ASV richness as a function of sequencing depth; the dashed line marks the rarefaction depth of "
-    "5,159 reads used for alpha diversity. (b) Distribution of library sizes across all retained "
-    "samples. Samples with fewer than 5,000 reads were excluded before rarefaction.")
-
-fig(f"{FIGM}/figS2_scfa.png", 6.6, "Supplementary Figure S2",
-    "<b>Supplementary Fig. S2. Cecal short-chain fatty acid concentrations.</b> "
+fig(f"{FIGM}/figS2_scfa.png", 6.6, "Supplementary Fig. 1",
+    "<b>Supplementary Fig. 1. Cecal short-chain fatty acid concentrations.</b> "
     "(a) Acetate, (b) propionate, and (c) butyrate measured by gas chromatography at the end of the "
     "experiment. Each point is one mouse; horizontal bars are group means. Blue, normal diet; red, "
     "high-fat diet. P values are from a Kruskal-Wallis test across all eight groups. This figure shows "
     "the per-animal distribution underlying the summary box plots of Fig. 1d-f.")
 
-fig(os.path.expanduser("~/vault/kjm/miseq/dada2_output/figures/taxonomy_stacked_bars.png"), 6.6, "Supplementary Figure S3",
-    "<b>Supplementary Fig. S3. Genus-level composition by group and timepoint.</b> "
+fig(f"{FIGM}/figS1_rarefaction.png", 6.3, "Supplementary Fig. 2",
+    "<b>Supplementary Fig. 2. Sequencing depth and rarefaction.</b> "
+    "(a) Rarefaction curves for a random subset of 150 of the 451 retained samples, showing expected "
+    "ASV richness as a function of sequencing depth; the dashed line marks the rarefaction depth of "
+    "5,159 reads used for alpha diversity. (b) Distribution of library sizes across all retained "
+    "samples. Samples with fewer than 5,000 reads were excluded before rarefaction (Supplementary Data 1).")
+
+fig(os.path.expanduser("~/vault/kjm/miseq/dada2_output/figures/taxonomy_stacked_bars.png"), 6.6, "Supplementary Fig. 3",
+    "<b>Supplementary Fig. 3. Genus-level composition by group and timepoint.</b> "
     "Stacked bars show the mean relative abundance of the 15 most abundant genera (remaining genera as 'Other') "
     "for each diet-antibiotic group at each 16S rRNA gene sampling timepoint. Relative abundances are "
     "percentages of the reads assigned at genus level in each sample. CTL and HFD are the untreated "
     "normal-diet and high-fat-diet groups.")
 
-fig(os.path.expanduser("~/vault/kjm/hiseq/figures/fig4d_top_args_heatmap.png"), 6.6, "Supplementary Figure S4",
-    "<b>Supplementary Fig. S4. Individual ARGs with the largest changes.</b> "
+fig(os.path.expanduser("~/vault/kjm/hiseq/figures/fig4d_top_args_heatmap.png"), 6.6, "Supplementary Fig. 4",
+    "<b>Supplementary Fig. 4. Individual ARGs with the largest changes.</b> "
     "Heatmap of mean read-level abundance (ARG copies per 16S rRNA gene copy; CARD protein homolog models "
     "only) for the 25 ARGs with the largest change in group mean between T0 and T3 in any "
     "antibiotic-treated group, shown for every group and timepoint (n = 3 mice each). Descriptive; "
@@ -129,36 +125,28 @@ def table(df, title, legend, maxrows=None, fontsize=7, landscape_page=False, col
     S.append(PageBreak())
 
 
-perm = pd.read_excel(XL, sheet_name="Table1_PERMANOVA")
+perm = pd.read_excel(XL, sheet_name="SupplTable1_PERMANOVA")
 table(perm, "Supplementary Table 1",
-      "<b>Supplementary Table 1.</b> PERMANOVA results for gut microbiome community composition "
-      "across timepoints (Bray-Curtis dissimilarity, 999 permutations).")
+      "<b>Supplementary Table 1.</b> PERMANOVA of gut microbiome community composition among the eight "
+      "groups at each timepoint (Bray-Curtis dissimilarity, 999 permutations).")
 
-genus = pd.read_excel(XL, sheet_name="TableS4_ARG_by_genus")
-table(genus, "Supplementary Table S4",
-      "<b>Supplementary Table S4.</b> Assembly-based ARG counts by bacterial genus, from GTDB-Tk "
-      "classification of medium-quality or better MAGs. The 40 genera with the most ARGs are shown; "
-      f"the complete table of {len(genus)} genera is provided as Supplementary Data.",
-      maxrows=40, colw=[1.05*inch, 0.6*inch, 0.6*inch, 0.5*inch, 3.55*inch])
-
-s7c = pd.read_excel(XL, sheet_name="TableS6c_SD14_vs_cecal_SCFA")
-table(s7c, "Supplementary Table S6c",
-      "<b>Supplementary Table S6c.</b> Mean butyrate-synthesis gene abundance (copies per genome) at "
-      "R14 for each experimental group, alongside the mean cecal acetate, propionate, and butyrate "
-      "concentrations (micromolar) measured by gas chromatography.")
-
-s7d = pd.read_excel(XL, sheet_name="TableS6d_SCFA_correlation")
-table(s7d, "Supplementary Table S6d",
-      "<b>Supplementary Table S6d.</b> Correlation between butyrate-synthesis gene abundance at R14 "
-      "and measured cecal SCFA concentrations, across the eight group means.")
-
-s8a = pd.read_excel(XL, sheet_name="TableS7a_mobilome_by_class")
-table(s8a, "Supplementary Table S7a",
-      "<b>Supplementary Table S7a.</b> Association of assembly-based ARGs with mobile genetic elements "
-      "by antibiotic class. An ARG was counted as mobile if its contig was predicted to be a plasmid or "
-      "phage, or carried a transposase, integrase, recombinase, relaxase, or conjugation gene. The 25 "
-      "most abundant drug-class assignments are shown; the full table is provided as Supplementary Data.",
-      maxrows=25, fontsize=6.5, colw=[2.9*inch, 0.6*inch, 0.5*inch, 0.6*inch, 0.6*inch, 0.75*inch, 0.45*inch])
+# Supplementary Data: title and legend for each item (npj: large tables are labelled
+# "Supplementary Data N" and their titles/legends go in this PDF). Legends are read from
+# the Supplementary information list in manuscript.txt so the two cannot drift apart.
+import re
+from openpyxl import load_workbook
+MS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "manuscript.txt")
+items = [l.strip() for l in open(MS) if re.match(r"Supplementary Data \d+\. ", l)]
+sheets = load_workbook(XL, read_only=True).sheetnames
+S.append(Paragraph("Supplementary Data", H2))
+S.append(Paragraph("Provided as a separate Excel workbook (supplementary_tables.xlsx). Each item occupies "
+                   "the sheet(s) whose name begins with its number (SD1, SD2a, ...).", BODY))
+for it in items:
+    n = re.match(r"Supplementary Data (\d+)\.", it).group(1)
+    title, legend = it.split(". ", 1)
+    sh = [x for x in sheets if re.match(rf"SD{n}(?:[a-z])?_", x)]
+    assert sh, n
+    S.append(Paragraph(f"<b>{title}.</b> {legend} <i>Sheets: {', '.join(sh)}.</i>", LEG))
 
 doc.build(S)
 print("wrote", OUT)
