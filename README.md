@@ -16,6 +16,7 @@ Raw reads: NCBI SRA, BioProject **PRJNA1501316**.
 | | `run_diversity.R` | alpha/beta diversity, PERMANOVA (Supplementary Table 1) |
 | | `run_sseries_stats.R`, `run_pairwise_permdisp.R` | repeated-measures models, PERMDISP (Supplementary Data 2) |
 | | `differential_abundance.R`, `diet_comparisons.R` | ALDEx2 differential abundance |
+| | `d0_baseline.R` | pre-diet (diet start, samples `ARG_D0_*`) vs T0 diet comparison (Supplementary Data 2) |
 | | `taxonomy_plots.py` | Fig. 3 panels (genus % of genus-assigned reads) |
 | | `plot_fig1_physiology.py`, `plot_fig2_diversity.py`, `plot_supplementary_figures.py` | Figs 1, 2 and Supplementary Figs 1, 2 |
 | `shotgun/preprocessing_resistome/` | `run_resistome.sh` | fastp QC, host removal (Bowtie2, GRCm39), Bowtie2 mapping to CARD, `samtools idxstats` |
