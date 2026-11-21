@@ -22,6 +22,12 @@ meta_arg <- meta[meta$experiment == "ARG" & meta$group %in% main_groups, ]
 shared <- intersect(colnames(asv), rownames(meta_arg))
 asv_arg <- asv[, shared]
 meta_arg <- meta_arg[shared, ]
+# same read threshold as every other 16S analysis (>= 5,000 reads; 451 samples). Added 2026-11-21:
+# the 33 low-read libraries (five empty) had been included here.
+ok_reads <- colSums(asv[, rownames(meta_arg)]) >= 5000
+meta_arg <- meta_arg[ok_reads, ]
+asv_arg <- asv_arg[, rownames(meta_arg)]
+cat("Samples after read filter:", ncol(asv_arg), "\n")
 
 # Filter ASVs
 min_samples <- ceiling(ncol(asv_arg) * 0.05)

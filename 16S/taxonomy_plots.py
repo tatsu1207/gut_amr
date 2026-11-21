@@ -29,6 +29,9 @@ asv = asv.drop(columns=["sequence"], errors="ignore")
 # Filter to ARG experiment samples only (have proper metadata)
 arg_samples = meta[meta["experiment"] == "ARG"].index  # main experiment only, as in the text (ARG_D0 day-0 batch excluded)
 arg_samples = arg_samples.intersection(asv.columns)
+# same read threshold as every other 16S analysis (>= 5,000 reads; added 2026-11-21 -- the 33 low-read
+# libraries, five of them empty, had been included in Fig. 3 and Supplementary Fig. 3)
+arg_samples = arg_samples[asv[arg_samples].sum() >= 5000]
 meta_arg = meta.loc[arg_samples]
 asv_arg = asv[arg_samples]
 
@@ -136,6 +139,15 @@ if available_targets:
 
     traj_colors = sns.color_palette("Set2", len(traj_groups))
 
+    # Pre-diet baseline (diet start, before HFD feeding; ARG_D0_* samples with CTL/HFD = diet assignment;
+    # 16 per diet; same genus % of genus-assigned reads). Plotted at day XPRE, left of an axis break.
+    XPRE = -2.5
+    pre_ids = meta[(meta["experiment"] == "ARG_D0") & meta["group"].isin(["CTL", "HFD"])].index.intersection(asv.columns)
+    pre = asv[pre_ids].copy(); pre["Genus"] = tax.loc[pre.index, "Genus"]
+    pre = pre.groupby("Genus").sum(); pre = pre.div(pre.sum(axis=0), axis=1) * 100
+    pre_diet = meta.loc[pre_ids, "diet"]
+    PRE_COL = {"ND": "#4477AA", "HFD": "#CC6677"}
+
     for ax_idx, genus in enumerate(available_targets):
         ax = axes[ax_idx]
         for t_idx, (traj_name, grp_list) in enumerate(traj_groups.items()):
@@ -157,13 +169,21 @@ if available_targets:
                        marker="o", markersize=4, capsize=3, linewidth=1.5,
                        color=traj_colors[t_idx], label=traj_name)
 
+        for diet, off in (("ND", -0.25), ("HFD", 0.25)):
+            v = pre.loc[genus, pre_diet[pre_diet == diet].index]
+            ax.errorbar(XPRE + off, v.mean(), yerr=v.sem(), marker="o", markersize=6, capsize=3,
+                        mfc="white", mec=PRE_COL[diet], mew=1.5, color=PRE_COL[diet], linestyle="none",
+                        label=f"Pre-diet_{diet}")
+        ax.axvline(-1.2, color="gray", linestyle=":", linewidth=0.8, alpha=0.7)
+        ax.text(-1.2, 1.0, "13-wk diet", transform=ax.get_xaxis_transform(), ha="center", va="bottom",
+                fontsize=7, color="gray")
         ax.set_xlabel("Timepoint")
         ax.set_ylabel("Relative abundance (%)")
         ax.set_title(f"{genus} dynamics", fontsize=12, fontweight="bold")
         ax.legend(fontsize=7, loc="best")
         ax.axvspan(0, 3, alpha=0.1, color="red", label="Treatment" if ax_idx == 0 else None)
-        ax.set_xticks([0, 1, 3, 6, 10, 13, 17])
-        ax.set_xticklabels(tp_order[:1] + tp_order[2:])  # skip T6h for readability
+        ax.set_xticks([XPRE, 0, 1, 3, 6, 10, 13, 17])
+        ax.set_xticklabels(["Pre-diet"] + tp_order[:1] + tp_order[2:])  # skip T6h for readability
 
     fig.suptitle("Key Genus Dynamics During Antibiotic Treatment and Recovery", fontsize=13, y=1.02)
     plt.tight_layout()

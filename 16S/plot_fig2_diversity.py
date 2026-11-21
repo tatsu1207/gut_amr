@@ -22,6 +22,21 @@ alpha = pd.read_csv(f"{DIVDIR}/alpha_diversity.csv")
 pcoa = pd.read_csv(f"{DIVDIR}/pcoa_bray_curtis.csv")
 eigen = pd.read_csv(f"{DIVDIR}/pcoa_eigenvalues.csv")
 bc_base = pd.read_csv(f"{DIVDIR}/bc_from_baseline.csv")
+# Pre-diet baseline (diet start, before HFD feeding; ARG_D0_* samples, 16 per diet assignment),
+# rarefied to the same 5,159 reads by miseq/d0_baseline.R. Shown left of T0 in panels A and B.
+_d0 = pd.read_csv(f"{DIVDIR}/d0_baseline_alpha.tsv", sep="\t")
+prediet = _d0[_d0["stage"] == "D0_prediet"]
+XPRE = -1.4   # x position of the pre-diet points (T0 = 0)
+
+def add_prediet(ax, col):
+    """Pre-diet ND/HFD means +/- SEM, open markers, with an axis-break mark before T0."""
+    for diet, c, off in (("ND", GROUP_COLORS["CTL"], -0.12), ("HFD", GROUP_COLORS["HFD"], 0.12)):
+        v = prediet[prediet["diet"] == diet][col]
+        ax.errorbar(XPRE + off, v.mean(), yerr=v.sem(), marker="o", mfc="white", mec=c, mew=1.4,
+                    color=c, capsize=3, markersize=6, linestyle="none", label=f"Pre-diet, {diet}")
+    ax.axvline(x=-0.7, color="gray", linestyle=":", alpha=0.6, linewidth=0.8)
+    ax.text(-0.7, 1.0, "13-wk diet", transform=ax.get_xaxis_transform(), ha="center", va="bottom",
+            fontsize=7, color="gray")
 
 # Filter to main 8 groups
 GROUPS = ['CTL', 'HFD', 'AMX_CTL', 'AMX_HFD', 'CIP_CTL', 'CIP_HFD', 'ERY_CTL', 'ERY_HFD']
@@ -66,8 +81,9 @@ for group in GROUPS:
                 marker=GROUP_MARKERS[group], color=GROUP_COLORS[group],
                 label=group, linewidth=1.5, capsize=3, markersize=5)
 
-ax.set_xticks(range(len(TP_ORDER)))
-ax.set_xticklabels(TP_ORDER, rotation=45, ha='right')
+add_prediet(ax, "shannon")
+ax.set_xticks([XPRE] + list(range(len(TP_ORDER))))
+ax.set_xticklabels(["Pre-diet"] + TP_ORDER, rotation=45, ha='right')
 ax.set_ylabel("Shannon index")
 ax.set_title("A) Shannon diversity", fontweight='bold')
 ax.axvline(x=3.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
@@ -90,8 +106,9 @@ for group in GROUPS:
                 marker=GROUP_MARKERS[group], color=GROUP_COLORS[group],
                 label=group, linewidth=1.5, capsize=3, markersize=5)
 
-ax.set_xticks(range(len(TP_ORDER)))
-ax.set_xticklabels(TP_ORDER, rotation=45, ha='right')
+add_prediet(ax, "richness")
+ax.set_xticks([XPRE] + list(range(len(TP_ORDER))))
+ax.set_xticklabels(["Pre-diet"] + TP_ORDER, rotation=45, ha='right')
 ax.set_ylabel("Observed ASVs")
 ax.set_title("B) Richness (observed ASVs)", fontweight='bold')
 ax.axvline(x=3.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
