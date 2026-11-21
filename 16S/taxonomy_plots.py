@@ -137,7 +137,10 @@ if available_targets:
         "Control_HFD": ["HFD"],
     }
 
-    traj_colors = sns.color_palette("Set2", len(traj_groups))
+    # colour = antibiotic (Okabe-Ito, colour-blind safe), style = diet: HFD solid line + filled marker,
+    # ND dashed line + open marker; ND/HFD nudged apart slightly on x so their error bars do not overlap.
+    ABX_COL = {"Control": "#555555", "AMX": "#E69F00", "CIP": "#0072B2", "ERY": "#009E73"}
+    DIET_STYLE = {"ND": dict(linestyle="--", mfc="white", dx=-0.12), "HFD": dict(linestyle="-", mfc=None, dx=0.12)}
 
     # Pre-diet baseline (diet start, before HFD feeding; ARG_D0_* samples with CTL/HFD = diet assignment;
     # 16 per diet; same genus % of genus-assigned reads). Plotted at day XPRE, left of an axis break.
@@ -167,28 +170,37 @@ if available_targets:
                 dict(zip(tp_order, [0, 0.25, 1, 3, 6, 10, 13, 17])))
             stats = stats.dropna(subset=["day"]).sort_values("day")
 
-            ax.errorbar(stats["day"], stats["mean"], yerr=stats["sem"],
-                       marker="o", markersize=4, capsize=3, linewidth=1.5,
-                       color=traj_colors[t_idx], label=traj_name)
+            abx, diet = traj_name.split("_")
+            col, sty = ABX_COL[abx], DIET_STYLE[diet]
+            ax.errorbar(stats["day"].astype(float) + sty["dx"], stats["mean"], yerr=stats["sem"],
+                       marker="o", markersize=5, capsize=2.5, linewidth=1.6, linestyle=sty["linestyle"],
+                       color=col, mec=col, mfc=sty["mfc"] or col, mew=1.3, elinewidth=0.9)
 
         for diet, off in (("ND", -0.25), ("HFD", 0.25)):
             v = pre.loc[genus, pre_diet[pre_diet == diet].index]
+            c = ABX_COL["Control"]
             ax.errorbar(XPRE + off, v.mean(), yerr=v.sem(), marker="o", markersize=6, capsize=3,
-                        mfc="white", mec=PRE_COL[diet], mew=1.5, color=PRE_COL[diet], linestyle="none",
-                        label=f"Pre-diet_{diet}")
+                        mfc=DIET_STYLE[diet]["mfc"] or c, mec=c, mew=1.4, color=c, linestyle="none")
         ax.axvline(-1.2, color="gray", linestyle=":", linewidth=0.8, alpha=0.7)
         ax.text(-1.2, 1.0, "13-wk diet", transform=ax.get_xaxis_transform(), ha="center", va="bottom",
                 fontsize=7, color="gray")
         ax.set_xlabel("Timepoint")
         ax.set_ylabel("Relative abundance (%)")
         ax.set_title(f"{genus} dynamics", fontsize=12, fontweight="bold")
-        ax.legend(fontsize=7, loc="best")
+        from matplotlib.lines import Line2D
+        h = [Line2D([], [], color=c, lw=2.5, label=a if a != "Control" else "No antibiotic")
+             for a, c in ABX_COL.items()]
+        h += [Line2D([], [], color="black", lw=1.6, ls="-", marker="o", mfc="black", label="HFD"),
+              Line2D([], [], color="black", lw=1.6, ls="--", marker="o", mfc="white", label="ND")]
+        legend_handles = h   # one shared legend below the panels (an in-panel legend hid data points)
         ax.axvspan(0, 3, alpha=0.1, color="red", label="Treatment" if ax_idx == 0 else None)
         ax.set_xticks([XPRE, 0, 1, 3, 6, 13, 17])
         ax.set_xticklabels(["Pre-diet", "T0h", "T24h", "T72h", "S72h", "SD10", "SD14"])  # T6h and R7 not shown
 
     fig.suptitle("Key Genus Dynamics During Antibiotic Treatment and Recovery", fontsize=13, y=1.02)
     plt.tight_layout()
+    fig.legend(handles=legend_handles, loc="upper center", bbox_to_anchor=(0.5, 0.0), ncol=6, fontsize=10,
+               frameon=False, handlelength=3)
     fig.savefig(OUT / "genus_trajectories.png", dpi=300, bbox_inches="tight")
     fig.savefig(OUT / "genus_trajectories.pdf", bbox_inches="tight")
     print(f"Saved: {OUT / 'genus_trajectories.png'}")
