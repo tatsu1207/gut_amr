@@ -42,7 +42,7 @@ def add_prediet(ax, col):
 
 # Filter to main 8 groups
 GROUPS = ['CTL', 'HFD', 'AMX_CTL', 'AMX_HFD', 'CIP_CTL', 'CIP_HFD', 'ERY_CTL', 'ERY_HFD']
-TP_ORDER = ['T0h', 'T6h', 'T24h', 'T72h', 'S72h', 'SD10', 'SD14']   # R7 omitted (failed run)
+TP_ORDER = ['T0h', 'T24h', 'T72h', 'S72h', 'SD10', 'SD14']   # R7 omitted (failed run); T6h omitted (untreated groups only, own run)
 
 alpha = alpha[alpha['group'].isin(GROUPS)].copy()
 pcoa = pcoa[pcoa['group'].isin(GROUPS)].copy()
@@ -82,9 +82,9 @@ ax.set_xticks([XPRE] + list(range(len(TP_ORDER))))
 ax.set_xticklabels(["Pre-diet"] + TP_ORDER, rotation=45, ha='right')
 ax.set_ylabel("Shannon index")
 ax.set_title("A) Shannon diversity", fontweight='bold')
-ax.axvline(x=3.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
-ax.text(1.5, ax.get_ylim()[1]*0.98, 'Treatment', ha='center', fontsize=8, color='gray')
-ax.text(5.0, ax.get_ylim()[1]*0.98, 'Recovery', ha='center', fontsize=8, color='gray')
+ax.axvline(x=2.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
+ax.text(1.0, ax.get_ylim()[1]*0.98, 'Treatment', ha='center', fontsize=8, color='gray')
+ax.text(4.0, ax.get_ylim()[1]*0.98, 'Recovery', ha='center', fontsize=8, color='gray')
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
@@ -104,7 +104,7 @@ ax.set_xticks([XPRE] + list(range(len(TP_ORDER))))
 ax.set_xticklabels(["Pre-diet"] + TP_ORDER, rotation=45, ha='right')
 ax.set_ylabel("Observed ASVs")
 ax.set_title("B) Richness (observed ASVs)", fontweight='bold')
-ax.axvline(x=3.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
+ax.axvline(x=2.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
@@ -144,7 +144,7 @@ ax.set_xticks(range(len(TP_ORDER)))
 ax.set_xticklabels(TP_ORDER, rotation=45, ha='right')
 ax.set_ylabel("Bray-Curtis dissimilarity from baseline")
 ax.set_title("D) Community displacement from baseline", fontweight='bold')
-ax.axvline(x=3.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
+ax.axvline(x=2.5, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 
