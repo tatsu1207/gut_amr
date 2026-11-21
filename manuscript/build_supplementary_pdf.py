@@ -87,7 +87,10 @@ fig(os.path.expanduser("~/vault/kjm/miseq/dada2_output/figures/taxonomy_stacked_
     "Stacked bars show the mean relative abundance of the 15 most abundant genera (remaining genera as 'Other') "
     "for each diet-antibiotic group at each 16S rRNA gene sampling timepoint. Relative abundances are "
     "percentages of the reads assigned at genus level in each sample. CTL and HFD are the untreated "
-    "normal-diet and high-fat-diet groups.")
+    "normal-diet and high-fat-diet groups. R7 is shown for completeness only: its samples were sequenced alone "
+    "on a separate MiSeq run that performed poorly (33% of reads passing quality filtering, compared with "
+    "52-79% at the other timepoints), and untreated mice showed abrupt, transient changes at R7 (for example, "
+    "Akkermansia falling to 0%); R7 is therefore not interpreted (Methods).")
 
 fig(os.path.expanduser("~/vault/kjm/hiseq/figures/fig4d_top_args_heatmap.png"), 6.6, "Supplementary Fig. 4",
     "<b>Supplementary Fig. 4. Individual ARGs with the largest changes.</b> "

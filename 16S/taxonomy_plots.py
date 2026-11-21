@@ -197,13 +197,19 @@ if available_targets:
 # ============================================================
 # Figure 3: Overall composition heatmap - top genera across groups
 # ============================================================
-mean_by_group = rel_plot.groupby("group")[top_genera].mean()
+# R7 (SD7) excluded (2026-11-21): sequenced alone on a failed MiSeq run (KDFCK); top 15 genera ranked
+# and averaged over the remaining timepoints.
+_ok = meta_arg.loc[rel_abund.columns, "timepoint"] != "SD7"
+_rel7 = rel_abund.loc[:, _ok.values]
+top_hm = _rel7.mean(axis=1).sort_values(ascending=False).head(15).index.tolist()
+print("heatmap genera changed vs all-timepoint top 15:", sorted(set(top_hm) ^ set(top_genera)))
+mean_by_group = _rel7.loc[top_hm].T.join(meta_arg[["group"]]).groupby("group")[top_hm].mean()
 mean_by_group = mean_by_group.reindex([g for g in groups_to_plot if g in mean_by_group.index])
 
 fig, ax = plt.subplots(figsize=(12, 7.5))
 sns.heatmap(mean_by_group.T, cmap="YlOrRd", annot=True, fmt=".1f",
             ax=ax, cbar_kws={"label": "Mean relative abundance (%)"})
-ax.set_title("Mean genus relative abundance by group (all timepoints pooled)", fontsize=12)
+ax.set_title("Mean genus relative abundance by group (all timepoints except R7 pooled)", fontsize=12)
 ax.set_ylabel("Genus")
 ax.set_xlabel("Treatment Group")
 plt.tight_layout()
