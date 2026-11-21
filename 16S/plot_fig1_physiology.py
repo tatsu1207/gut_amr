@@ -16,7 +16,7 @@ mpl.rcParams.update({
 OUTDIR = "/home/unnot/vault/kjm/miseq/dada2_output/figures"
 DATAFILE = "/home/unnot/vault/kjm/Raw_data_bio-prameter.xlsx"
 
-GROUPS = ['CTL', 'HFD', 'CIP_CTL', 'CIP_HFD', 'AMX_CTL', 'AMX_HFD', 'ERY_CTL', 'ERY_HFD']
+GROUPS = ['CTL', 'HFD', 'AMX_CTL', 'AMX_HFD', 'CIP_CTL', 'CIP_HFD', 'ERY_CTL', 'ERY_HFD']  # same order as Figs 2-6
 ND_GROUPS = ['CTL', 'CIP_CTL', 'AMX_CTL', 'ERY_CTL']
 HFD_GROUPS = ['HFD', 'CIP_HFD', 'AMX_HFD', 'ERY_HFD']
 colors = {g: '#3498db' if g in ND_GROUPS else '#e74c3c' for g in GROUPS}
@@ -115,117 +115,79 @@ for s in ['Acetate', 'Propionate', 'Butyrate']:
         scfa_data[s][g] = vals
 
 # ══════════════════════════════════════════════════
-# Plot Fig 1: 6 panels (2x3)
+# Plot Fig 1: 6 panels (3x2). Same scheme as Figs 2, 3 and 6: colour = antibiotic (Okabe-Ito);
+# ND = dashed line / open circle / light fill, HFD = solid line / filled triangle / solid fill.
 # ══════════════════════════════════════════════════
+ABX_COL = {"None": "#555555", "AMX": "#E69F00", "CIP": "#0072B2", "ERY": "#009E73"}
+def gabx(g): return g.split("_")[0] if "_" in g else "None"
+def is_hfd(g): return g.endswith("HFD")
+def gcol(g): return ABX_COL[gabx(g)]
+TICKLAB = ["CTL", "HFD", "AMX_CTL", "AMX_HFD", "CIP_CTL", "CIP_HFD", "ERY_CTL", "ERY_HFD"]
+
 fig, axes = plt.subplots(3, 2, figsize=(10, 12.5))  # portrait: A B / C D / E F
+x = np.arange(len(GROUPS))
+
+def style_ax(ax, title, ylabel, xt=True):
+    if xt:
+        ax.set_xticks(x); ax.set_xticklabels(TICKLAB, rotation=45, ha='right', fontsize=8)
+    ax.set_ylabel(ylabel); ax.set_title(title, fontweight='bold')
+    ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
+
+def points(ax, k, g, v, rng):
+    """Individual mice: ND open circles, HFD filled triangles, in the group colour (darkened edge)."""
+    c = gcol(g)
+    ax.scatter(k + rng.uniform(-0.14, 0.14, len(v)), v, s=14, marker=("^" if is_hfd(g) else "o"),
+               facecolor=(c if is_hfd(g) else "white"), edgecolor="black", linewidth=0.6, zorder=5)
 
 # ── Panel A: Body weight gain ──
 ax = axes.flat[0]
-markers = {'CTL': 'o', 'HFD': 'o', 'CIP_CTL': 'v', 'CIP_HFD': 'v',
-           'AMX_CTL': 's', 'AMX_HFD': 's', 'ERY_CTL': 'D', 'ERY_HFD': 'D'}
-fillstyle = {g: 'full' if g in ND_GROUPS else 'none' for g in GROUPS}
-x_weeks = list(range(len(weeks_labels)))
-
+x_weeks = np.arange(len(weeks_labels))
 for g in GROUPS:
-    ax.errorbar(x_weeks, weight_mean[g], yerr=weight_sem[g],
-                marker=markers[g], color=colors[g], label=g,
-                linewidth=1.2, capsize=2, markersize=4,
-                fillstyle=fillstyle[g], markeredgewidth=0.8)
+    c = gcol(g); h = is_hfd(g)
+    ax.errorbar(x_weeks + (0.08 if h else -0.08), weight_mean[g], yerr=weight_sem[g],
+                color=c, mec=c, mfc=(c if h else "white"), marker=("^" if h else "o"), mew=1.0,
+                ls=("-" if h else "--"), linewidth=1.3, capsize=2, markersize=4.5)
+TK = [0, 3, 6, 9, 13, 14, 15]
+ax.set_xticks(TK); ax.set_xticklabels([weeks_labels[i] for i in TK], rotation=45, ha='right', fontsize=8)
+ax.axvline(x=13, color='gray', linestyle=':', alpha=0.7, linewidth=0.9)
+ax.axvspan(13, 15.5, color="#eeeeee", zorder=0, lw=0)
+ax.set_xlim(-0.6, 15.6)
+ax.text(6.5, 1.0, "Diet (13 weeks)", transform=ax.get_xaxis_transform(), ha='center', va='bottom', fontsize=8, color='gray')
+ax.text(14.25, 1.0, "Abx +\nrecovery", transform=ax.get_xaxis_transform(), ha='center', va='bottom', fontsize=7.5, color='gray')
+style_ax(ax, "A) Body weight gain", "Weight gain (g)", xt=False)
+ax.set_title("A) Body weight gain", fontweight='bold', pad=22)
 
-ax.set_xticks(x_weeks[::2])
-ax.set_xticklabels([weeks_labels[i] for i in range(0, len(weeks_labels), 2)], rotation=45, ha='right', fontsize=7)
-ax.set_ylabel("Weight gain (g)")
-ax.set_title("A) Body weight gain", fontweight='bold')
-ax.axvline(x=13, color='gray', linestyle='--', alpha=0.5, linewidth=0.8)
-ax.text(6, max(weight_mean['AMX_HFD']) + 2, 'Diet period', ha='center', fontsize=7, color='gray')
-ax.text(14.5, max(weight_mean['AMX_HFD']) + 2, 'Abx', ha='center', fontsize=7, color='gray')
-ax.legend(fontsize=5.5, ncol=2, loc='upper left', framealpha=0.9)
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
+# ── Panels B, C: LDL / HDL cholesterol ──
+for i, (col, title, ylab) in enumerate([("LDL", "B) LDL cholesterol", "Serum LDL-C (mg/dL)"),
+                                        ("HDL", "C) HDL cholesterol", "Serum HDL-C (mg/dL)")], start=1):
+    ax = axes.flat[i]; rng = np.random.default_rng(1)
+    m = [chol.loc[chol.group == g, col].mean() for g in GROUPS]
+    se = [chol.loc[chol.group == g, col].std(ddof=1) / np.sqrt(chol.loc[chol.group == g, col].notna().sum()) for g in GROUPS]
+    for k, g in enumerate(GROUPS):
+        ax.bar(k, m[k], color=gcol(g), alpha=(0.9 if is_hfd(g) else 0.3), edgecolor=gcol(g), linewidth=1.2, width=0.75)
+        ax.errorbar(k, m[k], yerr=se[k], color="black", capsize=3, lw=1, zorder=4)
+        points(ax, k, g, chol.loc[chol.group == g, col].dropna().values, rng)
+    style_ax(ax, title, ylab)
+axes.flat[2].set_ylim(0, max(60, chol['HDL'].max() * 1.05))
 
-# ── Panel B: LDL cholesterol ──
-ax = axes.flat[1]
-x = np.arange(len(GROUPS))
-bar_colors = [colors[g] for g in GROUPS]
-bars = ax.bar(x, [ldl_mean[g] for g in GROUPS], yerr=[ldl_sem[g] for g in GROUPS],
-              color=bar_colors, edgecolor='white', capsize=3, alpha=0.8)
-ax.set_xticks(x)
-ax.set_xticklabels(GROUPS, rotation=45, ha='right', fontsize=7)
-ax.set_ylabel("Serum LDL-C (mg/dL)")
-ax.set_title("B) LDL cholesterol", fontweight='bold')
+# ── Panels D-F: cecal SCFAs ──
+for i, (scfa, title) in enumerate([("Acetate", "D) Acetate"), ("Propionate", "E) Propionate"), ("Butyrate", "F) Butyrate")], start=3):
+    ax = axes.flat[i]; rng = np.random.default_rng(2)
+    bp = ax.boxplot([scfa_data[scfa][g] for g in GROUPS], positions=x, widths=0.6, patch_artist=True,
+                    showfliers=False, medianprops=dict(color='black', linewidth=1.5))
+    for k, (patch, g) in enumerate(zip(bp['boxes'], GROUPS)):
+        patch.set_facecolor(gcol(g)); patch.set_alpha(0.85 if is_hfd(g) else 0.3); patch.set_edgecolor(gcol(g))
+        points(ax, k, g, scfa_data[scfa][g], rng)
+    style_ax(ax, title, "Concentration (μM)")
 
-# npj guideline: bar charts must overlay individual data points
-_rng = np.random.default_rng(1)
-for _k, _g in enumerate(GROUPS):
-    _v = chol.loc[chol['group'] == _g, 'LDL'].dropna().values
-    ax.scatter(_k + _rng.uniform(-0.15, 0.15, len(_v)), _v, s=8, color='black', alpha=0.7, zorder=5)
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-
-# ── Panel C: HDL cholesterol ──
-ax = axes.flat[2]
-bars = ax.bar(x, [hdl_mean[g] for g in GROUPS], yerr=[hdl_sem[g] for g in GROUPS],
-              color=bar_colors, edgecolor='white', capsize=3, alpha=0.8)
-ax.set_xticks(x)
-ax.set_xticklabels(GROUPS, rotation=45, ha='right', fontsize=7)
-ax.set_ylabel("Serum HDL-C (mg/dL)")
-ax.set_title("C) HDL cholesterol", fontweight='bold')
-
-# npj guideline: bar charts must overlay individual data points
-_rng = np.random.default_rng(1)
-for _k, _g in enumerate(GROUPS):
-    _v = chol.loc[chol['group'] == _g, 'HDL'].dropna().values
-    ax.scatter(_k + _rng.uniform(-0.15, 0.15, len(_v)), _v, s=8, color='black', alpha=0.7, zorder=5)
-ax.set_ylim(0, max(60, chol['HDL'].max() * 1.05))
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-
-# ── Panel D: Acetate ──
-ax = axes.flat[3]
-bp = ax.boxplot([scfa_data['Acetate'][g] for g in GROUPS],
-                positions=x, widths=0.6, patch_artist=True,
-                medianprops=dict(color='black', linewidth=1.5))
-for patch, g in zip(bp['boxes'], GROUPS):
-    patch.set_facecolor(colors[g])
-    patch.set_alpha(0.7)
-ax.set_xticks(x)
-ax.set_xticklabels(GROUPS, rotation=45, ha='right', fontsize=7)
-ax.set_ylabel("Concentration (μM)")
-ax.set_title("D) Acetate", fontweight='bold')
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-
-# ── Panel E: Propionate ──
-ax = axes.flat[4]
-bp = ax.boxplot([scfa_data['Propionate'][g] for g in GROUPS],
-                positions=x, widths=0.6, patch_artist=True,
-                medianprops=dict(color='black', linewidth=1.5))
-for patch, g in zip(bp['boxes'], GROUPS):
-    patch.set_facecolor(colors[g])
-    patch.set_alpha(0.7)
-ax.set_xticks(x)
-ax.set_xticklabels(GROUPS, rotation=45, ha='right', fontsize=7)
-ax.set_ylabel("Concentration (μM)")
-ax.set_title("E) Propionate", fontweight='bold')
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-
-# ── Panel F: Butyrate ──
-ax = axes.flat[5]
-bp = ax.boxplot([scfa_data['Butyrate'][g] for g in GROUPS],
-                positions=x, widths=0.6, patch_artist=True,
-                medianprops=dict(color='black', linewidth=1.5))
-for patch, g in zip(bp['boxes'], GROUPS):
-    patch.set_facecolor(colors[g])
-    patch.set_alpha(0.7)
-ax.set_xticks(x)
-ax.set_xticklabels(GROUPS, rotation=45, ha='right', fontsize=7)
-ax.set_ylabel("Concentration (μM)")
-ax.set_title("F) Butyrate", fontweight='bold')
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-
-plt.tight_layout()
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
+_h = [Patch(facecolor=c, edgecolor=c, label=("No antibiotic" if a == "None" else a)) for a, c in ABX_COL.items()]
+_h += [Line2D([], [], color="black", lw=1.3, ls="--", marker="o", mfc="white", label="ND (light fill)"),
+       Line2D([], [], color="black", lw=1.3, ls="-", marker="^", mfc="black", label="HFD (solid fill)")]
+plt.tight_layout(h_pad=2.0)
+fig.legend(handles=_h, loc="upper center", bbox_to_anchor=(0.5, 0.0), ncol=6, fontsize=9, frameon=False,
+           handlelength=2.6, columnspacing=1.2)
 plt.savefig(f"{OUTDIR}/fig1_physiology.pdf")
 plt.savefig(f"{OUTDIR}/fig1_physiology.png")
 plt.close()
