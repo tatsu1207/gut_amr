@@ -198,5 +198,10 @@ if not NOAC7:
   P(f"AC7_T72h share of pooled abundance {100 * ac7.sum() / pg[S].sum().sum():.1f}%; of pooled qnrD "
     f"{100 * (ac7.get('QnrD1', 0) + ac7.get('QnrD2', 0)) / pg[pg.gene_name.isin(['QnrD1', 'QnrD2'])][S].sum().sum():.0f}%")
   P(f"AC7_T72h total {ac7.sum():.3f}; qnrD1+qnrD2 share {100 * (ac7.get('QnrD1', 0) + ac7.get('QnrD2', 0)) / ac7.sum():.1f}%")
+# --- Fig. 5E: assembly ARG-carrying ORF counts vs community diversity and read-level abundance
+_ps = pd.read_csv("/home/unnot/vault/kjm/hiseq/mag_analysis/table_per_sample_summary.tsv", sep="\t").set_index("sample")
+_ps = _ps.loc[[x for x in S if x in _ps.index]]
+for _c, _v in [("genera recovered", _ps["n_genera"]), ("read-level total", tot.reindex(_ps.index))]:
+    r, p_ = spearmanr(_ps["total_ARGs"], _v); P(f"Fig5E ORFs ~ {_c}: rho {r:+.2f} p={p_:.1g} n={len(_ps)}")
 print("\n".join(out))
 open(f"{H}readlevel_stats_{LEVEL}{'_noAC7' if NOAC7 else ''}.txt", "w").write("\n".join(out) + "\n")
