@@ -45,8 +45,9 @@ contents = [
     ["Supplementary Fig. 2", "Rarefaction curves and library size distribution"],
     ["Supplementary Fig. 3", "Genus composition of each group at each timepoint"],
     ["Supplementary Fig. 4", "The 25 individual ARGs that changed most"],
+    ["Supplementary Fig. 5", "Community-wide pathway profiling and the butyrate method comparison"],
     ["Supplementary Table 1", "PERMANOVA results across timepoints"],
-    ["Supplementary Data 1-14", "Titles and legends; the data are provided as a separate Excel workbook "
+    ["Supplementary Data 1-15", "Titles and legends; the data are provided as a separate Excel workbook "
                                 "(supplementary_tables.xlsx), one or more sheets per item, sheet names "
                                 "prefixed SD1-SD14"],
 ]
@@ -96,6 +97,22 @@ fig(os.path.expanduser("~/vault/kjm/hiseq/figures/fig4d_top_args_heatmap.png"), 
     "only) for the 25 ARGs with the largest change in group mean between T0 and T3 in any "
     "antibiotic-treated group, shown for every group and timepoint (n = 3 mice each). Descriptive; "
     "no statistical test was applied.")
+
+fig(os.path.expanduser("~/vault/kjm/hiseq/figures/figS5_humann_pathways.png"), 6.4, "Supplementary Fig. 5",
+    "<b>Supplementary Fig. 5. Community-wide pathway profiling, and read-level versus assembly-based "
+    "butyrate quantification.</b> "
+    "(A) Number of MetaCyc pathways detected per sample (unstratified, non-zero CPM, UNMAPPED and "
+    "UNINTEGRATED excluded) at T0, T3 and R14, from MetaPhlAn 4.1 / HUMAnN 3.9 profiling of the same 72 "
+    "metagenomes; symbols are group means +/- SD with the three mice of each group overlaid as small "
+    "symbols. Two-way ANOVA at T3: antibiotic p = 0.001, diet p = 0.004, interaction p = 0.09. "
+    "(B) Read-level EC 2.8.3.8 abundance (CPM; symlog axis, so that zero and the single large value are "
+    "both visible) against the assembly-based terminal butyrate measure of Fig. 6A (but + buk copies per "
+    "genome equivalent), one point per sample. The two do not agree (Spearman rho = 0.17, p = 0.16, "
+    "n = 72); the labelled sample contains no but gene in its assembly, and its read-level signal comes "
+    "from the Escherichia acetoacetyl-CoA transferase AtoDA, which carries the same EC number. Butyrate "
+    "synthesis is therefore reported from the assemblies throughout (Methods). "
+    "Colours indicate the antibiotic as in Figs. 1, 2, 3, 4 and 6; ND groups are shown with dashed lines "
+    "and open circles, HFD groups with solid lines and filled triangles.")
 
 
 def table(df, title, legend, maxrows=None, fontsize=7, landscape_page=False, colw=None):
