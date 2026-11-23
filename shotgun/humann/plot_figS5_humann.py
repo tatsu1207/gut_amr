@@ -48,10 +48,11 @@ m = pd.read_csv(os.path.join(T, "humann_butyrate_reconcile.tsv"), sep="\t", inde
 TP = ["T0", "T3", "R14"]
 GROUPS = ["CTL", "HFD", "AMX_CTL", "AMX_HFD", "CIP_CTL", "CIP_HFD", "ERY_CTL", "ERY_HFD"]
 
-fig = plt.figure(figsize=(7.2, 6.4))
-gs = fig.add_gridspec(2, 1, height_ratios=[1.25, 1.0], hspace=0.42)
+fig = plt.figure(figsize=(7.2, 9.0))
+gs = fig.add_gridspec(3, 1, height_ratios=[1.25, 0.95, 0.95], hspace=0.46)
 axA = fig.add_subplot(gs[0])
-axB = fig.add_subplot(gs[1])
+axD = fig.add_subplot(gs[1])   # (B) depth vs richness at T3
+axB = fig.add_subplot(gs[2])   # (C) read-level vs assembly butyrate
 
 # ---- (A) pathway richness over the three shotgun timepoints -------------------------------
 x = np.arange(len(TP))
@@ -92,7 +93,36 @@ handles += [Line2D([], [], color=MUTED, lw=1.1, ls="--", marker="o", ms=5, mfc="
 axA.legend(handles=handles, frameon=False, fontsize=7, ncol=3, loc="upper center",
            bbox_to_anchor=(0.5, 1.30), handlelength=2.0, columnspacing=1.4)
 
-# ---- (B) read-level EC 2.8.3.8 against the assembly measure -------------------------------
+# ---- (B) sequencing depth against richness at T3 ------------------------------------------
+t3 = m[m["timepoint"] == "T3"]
+rho3, pv3 = spearmanr(t3["genome_equivalents_depth"], t3["n_pathways"])
+for g in GROUPS:
+    c = ABX_COL[gabx(g)]
+    hfd = is_hfd(g)
+    sub = t3[t3["group"] == g]
+    axD.scatter(sub["genome_equivalents_depth"], sub["n_pathways"], s=34,
+                marker=("^" if hfd else "o"), facecolor=(c if hfd else "white"),
+                edgecolor=c, linewidth=0.9, alpha=0.95, zorder=3)
+amx = t3[t3["group"].isin(["AMX_CTL", "AMX_HFD"])]
+if len(amx):
+    for grp, ls in (("AMX_CTL", "--"), ("AMX_HFD", "-")):
+        mu = t3[t3["group"] == grp]["genome_equivalents_depth"].mean()
+        axD.axvline(mu, color=ABX_COL["AMX"], ls=ls, lw=1.0, alpha=0.85, zorder=1)
+    axD.annotate("amoxicillin group means (lines):\nthe two diets are matched for depth\n"
+                 "(1,062 vs 1,001), so 283 vs 201\npathways is not a depth artefact",
+                 xy=(0.015, 0.95), xycoords="axes fraction", ha="left", va="top", fontsize=7,
+                 color=INK)
+axD.set_xlabel("Effective sequencing depth at T3 (genome equivalents)")
+axD.set_ylabel("MetaCyc pathways detected")
+axD.grid(True, color=GRID, lw=0.6)
+axD.set_axisbelow(True)
+axD.set_title("B", loc="left", fontweight="bold", fontsize=11, pad=8)
+axD.annotate(f"T3: Spearman $\\rho$ = {rho3:.2f}, $p$ = {pv3:.1g} ($n$ = {len(t3)})\n"
+             f"antibiotic term after adjusting for depth: $p$ = 0.15; diet term: $p$ = 0.003",
+             xy=(0.985, 0.06), xycoords="axes fraction", ha="right", va="bottom", fontsize=7,
+             color=MUTED)
+
+# ---- (C) read-level EC 2.8.3.8 against the assembly measure -------------------------------
 rho, pv = spearmanr(m["humann_but_cpm"], m["terminal_but_buk"])
 for g in GROUPS:
     c = ABX_COL[gabx(g)]
@@ -116,7 +146,7 @@ axB.set_xlabel("Assembly: terminal butyrate genes ($but$ + $buk$, copies per gen
 axB.set_ylabel("HUMAnN: EC 2.8.3.8 (CPM, symlog)")
 axB.grid(True, color=GRID, lw=0.6)
 axB.set_axisbelow(True)
-axB.set_title("B", loc="left", fontweight="bold", fontsize=11, pad=8)
+axB.set_title("C", loc="left", fontweight="bold", fontsize=11, pad=8)
 axB.annotate(f"Spearman $\\rho$ = {rho:.2f}, $p$ = {pv:.2f} ($n$ = {len(m)})",
              xy=(0.985, 0.94), xycoords="axes fraction", ha="right", va="top", fontsize=7.5,
              color=INK)

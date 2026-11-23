@@ -45,7 +45,7 @@ contents = [
     ["Supplementary Fig. 2", "Rarefaction curves and library size distribution"],
     ["Supplementary Fig. 3", "Genus composition of each group at each timepoint"],
     ["Supplementary Fig. 4", "The 25 individual ARGs that changed most"],
-    ["Supplementary Fig. 5", "Community-wide pathway profiling and the butyrate method comparison"],
+    ["Supplementary Fig. 5", "Pathway profiling, sequencing depth, and the butyrate method comparison"],
     ["Supplementary Table 1", "PERMANOVA results across timepoints"],
     ["Supplementary Data 1-15", "Titles and legends; the data are provided as a separate Excel workbook "
                                 "(supplementary_tables.xlsx), one or more sheets per item, sheet names "
@@ -98,14 +98,21 @@ fig(os.path.expanduser("~/vault/kjm/hiseq/figures/fig4d_top_args_heatmap.png"), 
     "antibiotic-treated group, shown for every group and timepoint (n = 3 mice each). Descriptive; "
     "no statistical test was applied.")
 
-fig(os.path.expanduser("~/vault/kjm/hiseq/figures/figS5_humann_pathways.png"), 6.4, "Supplementary Fig. 5",
-    "<b>Supplementary Fig. 5. Community-wide pathway profiling, and read-level versus assembly-based "
-    "butyrate quantification.</b> "
+fig(os.path.expanduser("~/vault/kjm/hiseq/figures/figS5_humann_pathways.png"), 6.1, "Supplementary Fig. 5",
+    "<b>Supplementary Fig. 5. Community-wide pathway profiling, its dependence on sequencing depth, and "
+    "read-level versus assembly-based butyrate quantification.</b> "
     "(A) Number of MetaCyc pathways detected per sample (unstratified, non-zero CPM, UNMAPPED and "
     "UNINTEGRATED excluded) at T0, T3 and R14, from MetaPhlAn 4.1 / HUMAnN 3.9 profiling of the same 72 "
     "metagenomes; symbols are group means +/- SD with the three mice of each group overlaid as small "
-    "symbols. Two-way ANOVA at T3: antibiotic p = 0.001, diet p = 0.004, interaction p = 0.09. "
-    "(B) Read-level EC 2.8.3.8 abundance (CPM; symlog axis, so that zero and the single large value are "
+    "symbols. Two-way ANOVA at T3 (antibiotic factor with four levels, the fourth being the untreated "
+    "groups): antibiotic p = 0.001, diet p = 0.004, interaction p = 0.09. "
+    "(B) Pathway richness against effective sequencing depth at T3, where the two are strongly related "
+    "(Spearman rho = 0.70, p = 2 x 10^-4, n = 24) and antibiotic-treated libraries are the shallowest. "
+    "Adjusting for log10 depth removes the antibiotic term (p = 0.15) but not the diet term (p = 0.003). "
+    "Vertical lines mark the mean depth of the two amoxicillin groups, which are matched (1,062 against "
+    "1,001 genome equivalents), so the difference in richness between them is not explained by depth; the "
+    "corresponding ciprofloxacin contrast is not matched (1,575 against 1,104) and is not interpreted. "
+    "(C) Read-level EC 2.8.3.8 abundance (CPM; symlog axis, so that zero and the single large value are "
     "both visible) against the assembly-based terminal butyrate measure of Fig. 6A (but + buk copies per "
     "genome equivalent), one point per sample. The two do not agree (Spearman rho = 0.17, p = 0.16, "
     "n = 72); the labelled sample contains no but gene in its assembly, and its read-level signal comes "
