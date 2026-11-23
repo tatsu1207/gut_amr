@@ -26,16 +26,28 @@ XLSX = os.path.join(H, "../../../KJM_info/manuscript/supplementary_tables.xlsx")
 OUT = os.path.join(H, "tables")
 os.makedirs(OUT, exist_ok=True)
 
+UNTREATED = "NONE"   # the label the published sheet uses for the CTL and HFD groups
+
 d = pd.read_excel(XLSX, "SD15_humann_pathways", index_col=0)
-d["abx"] = d["antibiotic"].fillna("None")
+# The published sheet labels the untreated rows "NONE". That spelling matters: the literal string
+# "None" is in pandas' default na_values, so a sheet holding "None" (or a blank cell) is read back as
+# NaN and statsmodels then DROPS those rows, silently fitting a three-level antibiotic factor on 18
+# samples. fillna is kept so the script also runs against older copies of the workbook.
+d["abx"] = d["antibiotic"].fillna(UNTREATED).replace({"None": UNTREATED, "none": UNTREATED})
+assert d["abx"].nunique() == 4, f"expected 4 antibiotic levels, got {sorted(d['abx'].unique())}"
 d["logp"] = np.log10(d["n_pathways"])
 d["logd"] = np.log10(d["genome_equivalents_depth"])
 
 rows = []
 
 
+def fmt_p(p):
+    """Keep three significant digits. round(p, 4) turned 2.55e-5 into 0, which reads as p = 0."""
+    return float(f"{float(p):.3g}")
+
+
 def add(timepoint, model, term, p, note=""):
-    rows.append(dict(timepoint=timepoint, model=model, term=term, p_value=round(float(p), 4), note=note))
+    rows.append(dict(timepoint=timepoint, model=model, term=term, p_value=fmt_p(p), note=note))
 
 
 # --- how strongly does richness depend on depth? ------------------------------------------------
@@ -54,7 +66,7 @@ for tp in ("T0", "T3", "R14"):
     for label, formula, how in MODELS:
         sub = d[d.timepoint == tp]
         if how == "drop":
-            sub = sub[sub.abx != "None"]
+            sub = sub[sub.abx != UNTREATED]
         a = sm.stats.anova_lm(smf.ols(formula, data=sub).fit(), typ=2)
         ps = {t: a.loc[t, "PR(>F)"] for t in a.index if t != "Residual"}
         print(f"  {tp:4s} {label:34s} n={len(sub):2d}  " +
@@ -65,7 +77,7 @@ for tp in ("T0", "T3", "R14"):
 # --- is each diet contrast balanced for depth? --------------------------------------------------
 print("\nDepth balance of the ND vs HFD contrast within each antibiotic, at T3")
 t3 = d[d.timepoint == "T3"]
-for ab in ("AMX", "CIP", "ERY", "None"):
+for ab in ("AMX", "CIP", "ERY", UNTREATED):
     s = t3[t3.abx == ab]
     nd, hf = s[s.diet == "ND"], s[s.diet == "HFD"]
     dn, dh = nd["genome_equivalents_depth"].mean(), hf["genome_equivalents_depth"].mean()
